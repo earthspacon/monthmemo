@@ -39,6 +39,8 @@ const PENDING_REPORTS_SQL = `SELECT reports.id, reports.agency_id AS agencyId, r
   JOIN clients ON clients.id = reports.client_id
   JOIN agencies ON agencies.id = reports.agency_id
   WHERE reports.status = 'pending'
+    AND agencies.status IN ('trialing', 'active')
+    AND COALESCE((SELECT SUM(cost_usd) FROM llm_usage WHERE day = ? AND agency_id = reports.agency_id), 0) < ?
   ORDER BY reports.created_at, reports.id
   LIMIT ?`;
 
@@ -94,9 +96,36 @@ export async function insertPendingReports({
   );
 }
 
-export async function listPendingReports({ db, limit }: { db: D1Database; limit: number }) {
-  const { results } = await db.prepare(PENDING_REPORTS_SQL).bind(limit).all<PendingReport>();
+// Agencies on an inactive plan or over their own daily AI cap are left out, so they cannot fill the batch.
+export async function listPendingReports({
+  db,
+  limit,
+  day,
+  agencyDailyCapUsd,
+}: {
+  db: D1Database;
+  limit: number;
+  day: string;
+  agencyDailyCapUsd: number;
+}) {
+  const { results } = await db.prepare(PENDING_REPORTS_SQL).bind(day, agencyDailyCapUsd, limit).all<PendingReport>();
   return results ?? [];
+}
+
+// A build that was killed mid-way leaves the row in `building`; after this long it is picked up again.
+export async function releaseStuckReports({ db, before, now }: { db: D1Database; before: string; now: string }) {
+  await db
+    .prepare("UPDATE reports SET status = 'pending', updated_at = ? WHERE status = 'building' AND updated_at < ?")
+    .bind(now, before)
+    .run();
+}
+
+export async function incrementBuildAttempts({ db, id }: { db: D1Database; id: string }) {
+  const row = await db
+    .prepare("UPDATE reports SET attempts = attempts + 1 WHERE id = ? AND status = 'building' RETURNING attempts")
+    .bind(id)
+    .first<{ attempts: number }>();
+  return row?.attempts ?? 0;
 }
 
 // The conditional update is the claim: one tick wins the row, every other tick sees zero changes (E8).
@@ -123,7 +152,7 @@ export async function markReportDraft({
 }) {
   await db
     .prepare(
-      `UPDATE reports SET status = 'draft', metrics_json = ?, narrative = ?, updated_at = ?
+      `UPDATE reports SET status = 'draft', attempts = 0, metrics_json = ?, narrative = ?, updated_at = ?
        WHERE id = ? AND status = 'building'`,
     )
     .bind(metricsJson, narrative, now, id)
@@ -362,7 +391,8 @@ export async function listSendingReports({ db, limit }: { db: D1Database; limit:
          reports.status, reports.metrics_json AS metricsJson, reports.narrative, clients.name AS clientName
        FROM reports
        JOIN clients ON clients.id = reports.client_id
-       WHERE reports.status = 'sending'
+       JOIN agencies ON agencies.id = reports.agency_id
+       WHERE reports.status = 'sending' AND agencies.status IN ('trialing', 'active')
        ORDER BY reports.updated_at, reports.id
        LIMIT ?`,
     )

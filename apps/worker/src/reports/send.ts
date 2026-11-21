@@ -155,7 +155,7 @@ async function sendFailureNotice({ deps, report }: { deps: Deps; report: Sending
       db: deps.db,
       agencyId: report.agencyId,
       period: report.period,
-      kind: SEND_FAILED_NOTICE_KIND,
+      kind: `${SEND_FAILED_NOTICE_KIND}:${report.id}`,
     }))
   ) {
     return;

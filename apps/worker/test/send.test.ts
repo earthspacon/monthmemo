@@ -10,6 +10,7 @@ import {
   runJobs,
   seedClient,
   seedReport,
+  setAgency,
   signInWithGoogle,
   uniqueEmail,
 } from "./helpers";
@@ -128,5 +129,35 @@ describe("Review and send", () => {
       return `${mail.subject}\n${mail.text ?? ""}\n${mail.html ?? ""}`.includes("Example Bakery");
     });
     expect(failureMails).toHaveLength(1);
+  });
+
+  it("MM-R21 two reports failing in one period send two notices", async () => {
+    const { cookie, profile, agencyId, reportId, recipients } = await agencyWithDraft();
+    const second = await seedClient({ agencyId, name: "Harbor Yoga", recipients: [uniqueEmail("client")] });
+    const secondId = await seedReport({ agencyId, clientId: second.clientId, period: fake.currentPeriod, status: "draft" });
+    fake.failingRecipients.add(recipients[0].email);
+    fake.failingRecipients.add(second.recipients[0].email);
+
+    expect((await act({ cookie, reportId, action: "approve" })).status).toBe(200);
+    expect((await act({ cookie, reportId: secondId, action: "approve" })).status).toBe(200);
+    await runJobs(SEND_TRIES);
+
+    for (const name of ["Example Bakery", "Harbor Yoga"]) {
+      const notices = mailsTo(profile.email).filter((mail) => {
+        return mail.subject.includes(name);
+      });
+      expect(notices).toHaveLength(1);
+    }
+  });
+
+  it("MM-R25 a past_due agency's sending report is not sent", async () => {
+    const { cookie, agencyId, reportId, recipients } = await agencyWithDraft();
+    expect((await act({ cookie, reportId, action: "approve" })).status).toBe(200);
+    await setAgency({ agencyId, status: "past_due" });
+
+    await runJobs(SEND_TRIES);
+
+    expect((await readReport(reportId)).status).toBe("sending");
+    expect(mailsTo(recipients[0].email)).toHaveLength(0);
   });
 });

@@ -61,6 +61,7 @@ type FakeState = {
   currentPeriod: string;
   emptyPeriods: Set<string>;
   missingGa4Properties: Set<string>;
+  brokenGa4Properties: Set<string>;
   missingGscSites: Set<string>;
   emptyAccount: boolean;
   anthropicReplies: AnthropicReply[];
@@ -80,6 +81,7 @@ function createState(): FakeState {
     currentPeriod: previousPeriodOf(new Date()),
     emptyPeriods: new Set(),
     missingGa4Properties: new Set(),
+    brokenGa4Properties: new Set(),
     missingGscSites: new Set(),
     emptyAccount: false,
     anthropicReplies: [],
@@ -291,6 +293,9 @@ type Ga4Request = {
 function ga4Report({ propertyId, body }: { propertyId: string; body: string }) {
   if (fake.missingGa4Properties.has(propertyId)) {
     return googleNotFound();
+  }
+  if (fake.brokenGa4Properties.has(propertyId)) {
+    return Response.json({ error: { code: 500, message: "Internal error", status: "INTERNAL" } }, { status: 500 });
   }
   const request: Ga4Request = JSON.parse(body);
   const dimension = request.dimensions?.[0]?.name;

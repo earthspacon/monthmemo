@@ -21,6 +21,7 @@ const TOO_LONG_WORDS = 400;
 const GOOD_WORDS = 120;
 const GLOBAL_CAP_USD = 5;
 const AGENCY_CAP_USD = 0.1;
+const PENDING_BATCH = 10;
 
 type MessagesRequest = {
   model: string;
@@ -136,5 +137,25 @@ describe("Report narrative", () => {
     expect((await readReport(capped.reportId)).status).toBe("pending");
     expect((await readReport(free.reportId)).status).toBe("draft");
     expect(anthropicRequests()).toHaveLength(1);
+  });
+
+  it("MM-R16 an agency over its own cap does not block other agencies", async () => {
+    const capped = await createConnectedAgency();
+    const { clientId } = await seedClient({ agencyId: capped.agencyId, name: "Example Bakery" });
+    for (let index = 0; index < PENDING_BATCH; index += 1) {
+      await seedReport({
+        agencyId: capped.agencyId,
+        clientId: (await seedClient({ agencyId: capped.agencyId, name: `Client ${index}` })).clientId,
+        period: fake.currentPeriod,
+        status: "pending",
+      });
+    }
+    expect(clientId).toBeTruthy();
+    const free = await pendingReport();
+    await recordUsage({ agencyId: capped.agencyId, costUsd: AGENCY_CAP_USD });
+
+    await runJobs(1);
+
+    expect((await readReport(free.reportId)).status).toBe("draft");
   });
 });

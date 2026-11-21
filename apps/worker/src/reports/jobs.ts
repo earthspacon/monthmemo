@@ -8,12 +8,14 @@ import {
   claimAgencyNotice,
   claimReport,
   countReportsByStatus,
+  incrementBuildAttempts,
   listFailedClients,
   listPendingReports,
   markReportDraft,
   markReportFailed,
   readAgencyOwnerEmail,
   releaseReport,
+  releaseStuckReports,
   type PendingReport,
   type StatusCount,
 } from "../repo/reports";
@@ -25,6 +27,8 @@ export const JOBS_CRON = "* * * * *";
 
 const PENDING_BATCH = 10;
 const NARRATIVE_ATTEMPTS = 2;
+const BUILD_ATTEMPTS = 3;
+const STUCK_BUILD_MS = 15 * 60 * 1000;
 const CAP_ALERT_KIND = "llm_daily_cap";
 const FAILED_NOTICE_KIND = "failed";
 const READY_NOTICE_KIND = "ready";
@@ -41,7 +45,18 @@ const FAILURE_LABELS: Record<FailureReason, string> = {
 
 // Claims up to 10 pending reports and turns each into a draft or a failed row without blocking the tick.
 export async function processPendingReports({ deps }: { deps: Deps }) {
-  const reports = await listPendingReports({ db: deps.db, limit: PENDING_BATCH });
+  const nowDate = deps.now();
+  await releaseStuckReports({
+    db: deps.db,
+    before: new Date(nowDate.getTime() - STUCK_BUILD_MS).toISOString(),
+    now: nowDate.toISOString(),
+  });
+  const reports = await listPendingReports({
+    db: deps.db,
+    limit: PENDING_BATCH,
+    day: nowDate.toISOString().slice(0, 10),
+    agencyDailyCapUsd: deps.budget.agencyDailyCapUsd,
+  });
   const touched = new Map<string, { agencyId: string; period: string }>();
 
   for (const report of reports) {
@@ -68,12 +83,14 @@ async function processReport({ deps, report }: { deps: Deps; report: PendingRepo
     return;
   }
 
+  let exhaustedReason: FailureReason = "google_error";
   try {
     const metrics = await loadMetricsOrRefresh({ deps, report });
 
     if (!metrics) {
       return;
     }
+    exhaustedReason = "narrative_failed";
     const narrative = await writeNarrative({ deps, report, metrics, day });
     const now = deps.now().toISOString();
 
@@ -89,7 +106,7 @@ async function processReport({ deps, report }: { deps: Deps; report: PendingRepo
       now,
     });
   } catch (error) {
-    await failOrRetry({ deps, report, error });
+    await failOrRetry({ deps, report, error, exhaustedReason });
   }
 }
 
@@ -130,7 +147,17 @@ function isStaleToken(error: unknown) {
   return error instanceof GoogleApiError && error.status === STALE_TOKEN_STATUS;
 }
 
-async function failOrRetry({ deps, report, error }: { deps: Deps; report: PendingReport; error: unknown }) {
+async function failOrRetry({
+  deps,
+  report,
+  error,
+  exhaustedReason = "google_error",
+}: {
+  deps: Deps;
+  report: PendingReport;
+  error: unknown;
+  exhaustedReason?: FailureReason;
+}) {
   const now = deps.now().toISOString();
 
   if (error instanceof GoogleReconnectNeeded) {
@@ -141,8 +168,12 @@ async function failOrRetry({ deps, report, error }: { deps: Deps; report: Pendin
     await markReportFailed({ db: deps.db, id: report.id, reason: "source_not_found", now });
     return;
   }
-  // A transient Google or model error keeps the report pending for the next tick.
+  // A transient Google or model error keeps the report pending for the next tick, up to a few attempts.
   console.error("Report build failed", error instanceof Error ? error.name : "unknown");
+  if ((await incrementBuildAttempts({ db: deps.db, id: report.id })) >= BUILD_ATTEMPTS) {
+    await markReportFailed({ db: deps.db, id: report.id, reason: exhaustedReason, now });
+    return;
+  }
   await releaseReport({ db: deps.db, id: report.id, now });
 }
 

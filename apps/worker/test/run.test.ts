@@ -8,6 +8,7 @@ import {
   createConnectedAgency,
   db,
   expireAccessToken,
+  GA4_PROPERTY_ID,
   MONTHLY_RUN_CRON,
   readReport,
   runCron,
@@ -153,6 +154,50 @@ describe("Monthly run", () => {
       return mailText(mail).includes("Lost Property Cafe");
     });
     expect(healthyFailureMails).toHaveLength(1);
+  });
+
+  it("MM-R17 a repeating Google 500 fails the report with google_error after 3 ticks", async () => {
+    const agency = await createConnectedAgency();
+    const { clientId } = await seedClient({ agencyId: agency.agencyId, name: "Example Bakery" });
+    const reportId = await seedReport({
+      agencyId: agency.agencyId,
+      clientId,
+      period: fake.currentPeriod,
+      status: "pending",
+    });
+    fake.brokenGa4Properties.add(GA4_PROPERTY_ID);
+
+    await runJobs(1);
+    expect((await readReport(reportId)).status).toBe("pending");
+    await runJobs(2);
+
+    expect(await readReport(reportId)).toMatchObject({ status: "failed", failure_reason: "google_error" });
+    expect(
+      mailsTo(agency.profile.email).filter((mail) => {
+        return mailText(mail).includes("Example Bakery");
+      }),
+    ).toHaveLength(1);
+  });
+
+  it("MM-R13 a report stuck in building for 15 min is rebuilt", async () => {
+    const agency = await createConnectedAgency();
+    const { clientId } = await seedClient({ agencyId: agency.agencyId, name: "Example Bakery" });
+    const stuck = await seedReport({ agencyId: agency.agencyId, clientId, period: fake.currentPeriod, status: "pending" });
+    const fresh = await seedReport({
+      agencyId: agency.agencyId,
+      clientId: (await seedClient({ agencyId: agency.agencyId, name: "Harbor Yoga" })).clientId,
+      period: fake.currentPeriod,
+      status: "pending",
+    });
+    const longAgo = new Date(Date.now() - 16 * MINUTE_MS).toISOString();
+    const justNow = new Date().toISOString();
+    await db.prepare("UPDATE reports SET status = 'building', updated_at = ? WHERE id = ?").bind(longAgo, stuck).run();
+    await db.prepare("UPDATE reports SET status = 'building', updated_at = ? WHERE id = ?").bind(justNow, fresh).run();
+
+    await runJobs(1);
+
+    expect((await readReport(stuck)).status).toBe("draft");
+    expect((await readReport(fresh)).status).toBe("building");
   });
 
   it("MM-R18 the agency gets exactly one ready-to-review email when its last pending report resolves", async () => {
