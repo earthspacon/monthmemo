@@ -1,7 +1,7 @@
 import type { Env } from "./env";
 import { isDev } from "./env";
 import { createMailer, type Mailer } from "./mailer";
-import { createAnthropicWriter } from "./narrative/anthropic";
+import { createGroqWriter } from "./narrative/groq";
 import { readLlmBudget, type LlmBudget } from "./narrative/budget";
 import type { NarrativeWriter } from "./narrative/prompt";
 import { createTemplateWriter } from "./narrative/template";
@@ -17,15 +17,15 @@ export type Deps = {
 };
 
 function createNarrativeWriter(env: Env): NarrativeWriter {
-  if (env.ANTHROPIC_API_KEY) {
-    return createAnthropicWriter({ apiKey: env.ANTHROPIC_API_KEY });
+  if (env.GROQ_API_KEY) {
+    return createGroqWriter({ apiKey: env.GROQ_API_KEY, model: env.LLM_MODEL });
   }
   if (isDev(env)) {
     return createTemplateWriter();
   }
   return {
     write: async () => {
-      throw new Error("ANTHROPIC_API_KEY is not set");
+      throw new Error("GROQ_API_KEY is not set");
     },
   };
 }

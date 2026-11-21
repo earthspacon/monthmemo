@@ -12,7 +12,7 @@ export default defineConfig(async () => {
         main: "./src/index.ts",
         wrangler: { configPath: "./wrangler.toml" },
         miniflare: {
-          // Test-only values: every outbound call to Google, Anthropic, Resend, Paddle and Turnstile is faked in test/fakes.ts.
+          // Test-only values: every outbound call to Google, Groq, Resend, Paddle and Turnstile is faked in test/fakes.ts.
           bindings: {
             TEST_MIGRATIONS: migrations,
             DEV_ROUTES: "1",
@@ -20,7 +20,7 @@ export default defineConfig(async () => {
             BETTER_AUTH_SECRET: "test-only-secret-that-is-at-least-32-chars",
             GOOGLE_CLIENT_ID: "test-client-id.apps.googleusercontent.com",
             GOOGLE_CLIENT_SECRET: "test-google-client-secret",
-            ANTHROPIC_API_KEY: "test-anthropic-key",
+            GROQ_API_KEY: "test-groq-key",
             RESEND_API_KEY: "test-resend-key",
             PADDLE_API_KEY: "test-paddle-key",
             PADDLE_CLIENT_TOKEN: "test_paddle_client_token",

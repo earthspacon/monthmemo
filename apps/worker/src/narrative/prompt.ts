@@ -1,9 +1,8 @@
 import type { ReportMetrics } from "@monthmemo/contract";
 
-export const NARRATIVE_MODEL = "claude-haiku-5-5";
+export const NARRATIVE_MODEL = "openai/gpt-oss-120b";
 export const NARRATIVE_MAX_TOKENS = 400;
-export const ANTHROPIC_VERSION = "2023-06-01";
-export const ANTHROPIC_MESSAGES_URL = "https://api.anthropic.com/v1/messages";
+export const GROQ_CHAT_URL = "https://api.groq.com/openai/v1/chat/completions";
 
 export const NARRATIVE_SYSTEM_PROMPT = `You write the short monthly performance note an agency sends to its client.
 Write plain text only, in English, for a business owner who does not read analytics dashboards.
@@ -27,21 +26,26 @@ export type NarrativeWriter = {
   write: (request: NarrativeRequest) => Promise<Narrative>;
 };
 
-export type NarrativeMessageRequest = {
+export type NarrativeChatRequest = {
   model: string;
-  max_tokens: number;
-  temperature: number;
-  system: string;
-  messages: Array<{ role: "user"; content: string }>;
+  max_completion_tokens: number;
+  reasoning_effort: "low";
+  messages: Array<{ role: "system" | "user"; content: string }>;
 };
 
-export function buildNarrativePrompt({ metrics, clientName, period }: NarrativeRequest): NarrativeMessageRequest {
+export function buildNarrativePrompt({
+  request: { metrics, clientName, period },
+  model = NARRATIVE_MODEL,
+}: {
+  request: NarrativeRequest;
+  model?: string;
+}): NarrativeChatRequest {
   return {
-    model: NARRATIVE_MODEL,
-    max_tokens: NARRATIVE_MAX_TOKENS,
-    temperature: 0,
-    system: NARRATIVE_SYSTEM_PROMPT,
+    model,
+    max_completion_tokens: NARRATIVE_MAX_TOKENS,
+    reasoning_effort: "low",
     messages: [
+      { role: "system", content: NARRATIVE_SYSTEM_PROMPT },
       {
         role: "user",
         content: `Client: ${clientName}\nMonth: ${period}\n\nMetrics (JSON):\n${JSON.stringify(metrics, null, 2)}\n\nWrite the report narrative.`,

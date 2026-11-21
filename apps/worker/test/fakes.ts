@@ -3,12 +3,12 @@ import ga4RunReport from "../fixtures/google/ga4-run-report.json";
 import gscQuery from "../fixtures/google/gsc-query.json";
 import sites from "../fixtures/google/sites.json";
 
-// Every outbound call of the worker goes through this one fetch: Google, Anthropic, Resend, Paddle and Turnstile
+// Every outbound call of the worker goes through this one fetch: Google, Groq, Resend, Paddle and Turnstile
 // answer from here, any other URL throws, so no test can reach a real service.
 export const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 export const GOOGLE_ACCOUNT_SUMMARIES_URL = "https://analyticsadmin.googleapis.com/v1beta/accountSummaries";
 export const GOOGLE_SITES_URL = "https://www.googleapis.com/webmasters/v3/sites";
-export const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
+export const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 export const RESEND_URL = "https://api.resend.com/emails";
 export const SITEVERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
 const RUN_REPORT_PATTERN = /^https:\/\/analyticsdata\.googleapis\.com\/v1beta\/properties\/([^/:]+):runReport$/;
@@ -43,7 +43,7 @@ export type GoogleGrant = {
   refreshToken: string | null;
 };
 
-export type AnthropicReply = { text: string } | { status: number };
+export type GroqReply = { text: string } | { status: number };
 
 type RecordedCall = {
   url: string;
@@ -64,7 +64,7 @@ type FakeState = {
   brokenGa4Properties: Set<string>;
   missingGscSites: Set<string>;
   emptyAccount: boolean;
-  anthropicReplies: AnthropicReply[];
+  groqReplies: GroqReply[];
   failingRecipients: Set<string>;
   resendFailsAll: boolean;
 };
@@ -84,7 +84,7 @@ function createState(): FakeState {
     brokenGa4Properties: new Set(),
     missingGscSites: new Set(),
     emptyAccount: false,
-    anthropicReplies: [],
+    groqReplies: [],
     failingRecipients: new Set(),
     resendFailsAll: false,
   };
@@ -171,8 +171,8 @@ async function route({ request, body }: { request: Request; body: string }) {
       return gscReport({ siteUrl: decodeURIComponent(searchAnalytics[1]), body });
     });
   }
-  if (url === ANTHROPIC_URL) {
-    return anthropic(body);
+  if (url === GROQ_URL) {
+    return groq(body);
   }
   if (url === RESEND_URL) {
     return resend(body);
@@ -422,25 +422,19 @@ export function narrativeOfWords(count: number) {
   return wordsOf(count);
 }
 
-function anthropic(body: string) {
+function groq(body: string) {
   const request: { model?: string } = JSON.parse(body);
-  const reply = fake.anthropicReplies.shift() ?? { text: wordsOf(GOOD_NARRATIVE_WORDS) };
+  const reply = fake.groqReplies.shift() ?? { text: wordsOf(GOOD_NARRATIVE_WORDS) };
 
   if ("status" in reply) {
-    return Response.json(
-      { type: "error", error: { type: "api_error", message: "Internal server error" } },
-      { status: reply.status },
-    );
+    return Response.json({ error: { message: "Upstream error", type: "api_error" } }, { status: reply.status });
   }
   return Response.json({
-    id: `msg_${crypto.randomUUID().replaceAll("-", "")}`,
-    type: "message",
-    role: "assistant",
-    model: request.model ?? "claude-haiku-5-5",
-    content: reply.text === "" ? [] : [{ type: "text", text: reply.text }],
-    stop_reason: "end_turn",
-    stop_sequence: null,
-    usage: { input_tokens: 900, output_tokens: 220 },
+    id: `chatcmpl-${crypto.randomUUID()}`,
+    object: "chat.completion",
+    model: request.model ?? "openai/gpt-oss-120b",
+    choices: [{ index: 0, message: { role: "assistant", content: reply.text }, finish_reason: "stop" }],
+    usage: { prompt_tokens: 900, completion_tokens: 220, total_tokens: 1120 },
   });
 }
 

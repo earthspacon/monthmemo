@@ -10,7 +10,7 @@ function describeChange({ label, metric }: { label: string; metric: MetricChange
   return `${label} is ${direction} ${Math.abs(metric.changePercent).toFixed(1)}% (${metric.current} this month, ${metric.previous} last month).`;
 }
 
-// Dev and local runs write this text instead of paying for a model call; tests use the Anthropic fake.
+// Dev and local runs write this text instead of paying for a model call; tests use the Groq fake.
 export function createTemplateWriter(): NarrativeWriter {
   return {
     write: async ({ metrics, clientName, period }: NarrativeRequest) => {

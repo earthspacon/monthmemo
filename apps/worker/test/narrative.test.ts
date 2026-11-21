@@ -2,7 +2,7 @@ import { NARRATIVE_WORDS_MAX } from "@monthmemo/contract";
 import { env } from "cloudflare:test";
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { ANTHROPIC_URL, callsTo, fake, mailsTo, narrativeOfWords } from "./fakes";
+import { GROQ_URL, callsTo, fake, mailsTo, narrativeOfWords } from "./fakes";
 import {
   clearRunState,
   createConnectedAgency,
@@ -15,7 +15,7 @@ import {
 } from "./helpers";
 
 const JOB_TICKS = 3;
-const NARRATIVE_MODEL = "claude-haiku-5-5";
+const NARRATIVE_MODEL = "openai/gpt-oss-120b";
 const NARRATIVE_MAX_TOKENS = 400;
 const TOO_LONG_WORDS = 400;
 const GOOD_WORDS = 120;
@@ -23,23 +23,22 @@ const GLOBAL_CAP_USD = 5;
 const AGENCY_CAP_USD = 0.1;
 const PENDING_BATCH = 10;
 
-type MessagesRequest = {
+type ChatRequest = {
   model: string;
-  max_tokens: number;
-  temperature?: number;
-  system?: string | Array<{ type: string; text: string }>;
-  messages: Array<{ role: string; content: string | Array<{ type: string; text: string }> }>;
+  max_completion_tokens: number;
+  reasoning_effort: string;
+  messages: Array<{ role: string; content: string }>;
 };
 
-function anthropicRequests() {
-  return callsTo(ANTHROPIC_URL).map((call) => {
-    const request: MessagesRequest = JSON.parse(call.body);
+function groqRequests() {
+  return callsTo(GROQ_URL).map((call) => {
+    const request: ChatRequest = JSON.parse(call.body);
     return request;
   });
 }
 
-function promptOf(request: MessagesRequest) {
-  return JSON.stringify({ system: request.system, messages: request.messages });
+function promptOf(request: ChatRequest) {
+  return JSON.stringify(request.messages);
 }
 
 async function pendingReport() {
@@ -73,16 +72,22 @@ describe("Report narrative", () => {
   it("MM-R15 a good reply makes the report a draft with that narrative from one model call", async () => {
     const { reportId } = await pendingReport();
     const narrative = narrativeOfWords(GOOD_WORDS);
-    fake.anthropicReplies = [{ text: narrative }];
+    fake.groqReplies = [{ text: narrative }];
 
     await runJobs(JOB_TICKS);
 
     const report = await readReport(reportId);
     expect(report.status).toBe("draft");
     expect(report.narrative).toBe(narrative);
-    const requests = anthropicRequests();
+    const requests = groqRequests();
     expect(requests).toHaveLength(1);
-    expect(requests[0]).toMatchObject({ model: NARRATIVE_MODEL, max_tokens: NARRATIVE_MAX_TOKENS, temperature: 0 });
+    expect(requests[0]).toMatchObject({
+      model: NARRATIVE_MODEL,
+      max_completion_tokens: NARRATIVE_MAX_TOKENS,
+      reasoning_effort: "low",
+    });
+    expect(requests[0].messages.map((message) => message.role)).toEqual(["system", "user"]);
+    expect(callsTo(GROQ_URL)[0].headers.get("authorization")).toBe("Bearer test-groq-key");
     const prompt = promptOf(requests[0]);
     expect(prompt).toContain("150 words");
     expect(prompt).toContain("4820");
@@ -90,23 +95,38 @@ describe("Report narrative", () => {
 
   it("MM-R15 an empty reply gets one retry and the second good reply makes a draft", async () => {
     const { reportId } = await pendingReport();
-    fake.anthropicReplies = [{ text: "" }, { text: narrativeOfWords(GOOD_WORDS) }];
+    fake.groqReplies = [{ text: "" }, { text: narrativeOfWords(GOOD_WORDS) }];
 
     await runJobs(JOB_TICKS);
 
     expect((await readReport(reportId)).status).toBe("draft");
-    expect(anthropicRequests()).toHaveLength(2);
+    expect(groqRequests()).toHaveLength(2);
   });
 
   it("MM-R15 a 400-word reply gets one retry and then fails the report with narrative_failed", async () => {
     const { reportId } = await pendingReport();
     expect(TOO_LONG_WORDS).toBeGreaterThan(NARRATIVE_WORDS_MAX);
-    fake.anthropicReplies = [{ text: narrativeOfWords(TOO_LONG_WORDS) }, { text: narrativeOfWords(TOO_LONG_WORDS) }];
+    fake.groqReplies = [{ text: narrativeOfWords(TOO_LONG_WORDS) }, { text: narrativeOfWords(TOO_LONG_WORDS) }];
 
     await runJobs(JOB_TICKS);
 
     expect(await readReport(reportId)).toMatchObject({ status: "failed", failure_reason: "narrative_failed" });
-    expect(anthropicRequests()).toHaveLength(2);
+    expect(groqRequests()).toHaveLength(2);
+  });
+
+  it("MM-R15 a Groq 429 keeps the report pending like the cap does, alerts the owner once, and resumes later", async () => {
+    const { reportId } = await pendingReport();
+    fake.groqReplies = [{ status: 429 }];
+
+    await runJobs(1);
+
+    expect((await readReport(reportId)).status).toBe("pending");
+    expect(groqRequests()).toHaveLength(1);
+    expect(ownerAlerts()).toHaveLength(1);
+
+    await runJobs(JOB_TICKS);
+    expect((await readReport(reportId)).status).toBe("draft");
+    expect(ownerAlerts()).toHaveLength(1);
   });
 
   it("MM-R16 over the global daily cap the report stays pending, the owner gets one alert, and it resumes after reset", async () => {
@@ -116,7 +136,7 @@ describe("Report narrative", () => {
 
     await runJobs(JOB_TICKS);
     expect((await readReport(reportId)).status).toBe("pending");
-    expect(anthropicRequests()).toHaveLength(0);
+    expect(groqRequests()).toHaveLength(0);
 
     await runJobs(JOB_TICKS);
     expect(ownerAlerts()).toHaveLength(1);
@@ -136,7 +156,7 @@ describe("Report narrative", () => {
 
     expect((await readReport(capped.reportId)).status).toBe("pending");
     expect((await readReport(free.reportId)).status).toBe("draft");
-    expect(anthropicRequests()).toHaveLength(1);
+    expect(groqRequests()).toHaveLength(1);
   });
 
   it("MM-R16 an agency over its own cap does not block other agencies", async () => {

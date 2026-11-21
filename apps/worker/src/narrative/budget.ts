@@ -10,7 +10,7 @@ export type LlmBudget = {
   alertOwner: (mail: { subject: string; text: string }) => Promise<void>;
 };
 
-// Without ANTHROPIC_API_KEY and with DEV_ROUTES=1 a template writer is used, so the caps only matter for real calls.
+// Without GROQ_API_KEY and with DEV_ROUTES=1 a template writer is used, so the caps only matter for real calls.
 export function readLlmBudget({ env, mailer }: { env: Env; mailer: Mailer }): LlmBudget {
   return {
     dailyCapUsd: readUsd({ value: env.LLM_DAILY_USD_CAP, fallback: DEFAULT_DAILY_CAP_USD }),

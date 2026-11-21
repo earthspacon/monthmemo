@@ -3,6 +3,7 @@ import { NARRATIVE_WORDS_MAX, type FailureReason, type ReportMetrics, type Repor
 import type { Deps } from "../deps";
 import { GoogleApiError } from "../google/client";
 import { createGoogleClientFor, GoogleReconnectNeeded, refreshGoogleAccessTokenFor } from "../google/tokens";
+import { GroqRateLimited } from "../narrative/groq";
 import { countWords } from "../narrative/prompt";
 import {
   claimAgencyNotice,
@@ -106,6 +107,11 @@ async function processReport({ deps, report }: { deps: Deps; report: PendingRepo
       now,
     });
   } catch (error) {
+    if (error instanceof GroqRateLimited) {
+      await releaseReport({ db: deps.db, id: report.id, now: deps.now().toISOString() });
+      await alertBudgetReached({ deps, day });
+      return;
+    }
     await failOrRetry({ deps, report, error, exhaustedReason });
   }
 }

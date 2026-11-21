@@ -18,7 +18,7 @@ declare namespace Cloudflare {
     BETTER_AUTH_SECRET: string;
     GOOGLE_CLIENT_ID: string;
     GOOGLE_CLIENT_SECRET: string;
-    ANTHROPIC_API_KEY: string;
+    GROQ_API_KEY: string;
     RESEND_API_KEY: string;
     PADDLE_API_KEY: string;
     PADDLE_WEBHOOK_SECRET: string;
