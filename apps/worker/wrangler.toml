@@ -50,6 +50,9 @@ TURNSTILE_SITE_KEY = "1x00000000000000000000AA"
 [env.production]
 name = "monthmemo"
 routes = [{ pattern = "monthmemo.spacesonlabs.com", custom_domain = true }]
+# The product domain is the only public origin: no workers.dev or preview URLs.
+workers_dev = false
+preview_urls = false
 
 [env.production.assets]
 directory = "../web/dist"
