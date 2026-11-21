@@ -6,6 +6,7 @@ import { Navigate, NavLink, Outlet, useLocation } from "react-router-dom";
 import { googleStatusRequested } from "../connect/model";
 import { $sessionError, $sessionStatus, appStarted, signOutClicked } from "../session/model";
 import { BUTTON_SECONDARY, ErrorState, LoadingState } from "../shared/ui";
+import { PlanBanner } from "./PlanBanner";
 import { ReconnectBanner } from "./ReconnectBanner";
 
 const NAV = [
@@ -61,6 +62,7 @@ export const AppShell = () => {
           Sign out
         </button>
       </header>
+      <PlanBanner />
       <ReconnectBanner />
       <main>
         <Outlet />

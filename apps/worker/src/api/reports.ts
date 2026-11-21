@@ -14,7 +14,7 @@ import {
   type ReportListRow,
 } from "../repo/reports";
 import { reportMetricsOf } from "../reports/send";
-import type { ApiContext } from "./context";
+import { requireActivePlan, type ApiContext } from "./context";
 
 const ISO_DAY_LENGTH = 10;
 const PERIOD_PATTERN = /^\d{4}-\d{2}$/;
@@ -114,6 +114,7 @@ export const reportRoutes: Route<ApiContext>[] = [
   }),
 
   route("POST", "/api/reports/:id/approve", async (context) => {
+    requireActivePlan(context);
     const report = await requireReport(context);
     const now = context.deps.now().toISOString();
 

@@ -136,3 +136,63 @@ export async function updateBrand({
     .bind(brand.displayName, brand.accentColor, brand.logoUrl, brand.replyTo, now.toISOString(), agencyId)
     .run();
 }
+
+export type BillingRow = {
+  id: string;
+  plan: Plan;
+  status: AgencyStatus;
+  trialEndsAt: string | null;
+  paddleCustomerId: string | null;
+  paddleSubscriptionId: string | null;
+};
+
+const BILLING_COLUMNS = `id, plan, status, trial_ends_at AS trialEndsAt, paddle_customer_id AS paddleCustomerId,
+  paddle_subscription_id AS paddleSubscriptionId`;
+
+export async function getBillingRow({ db, agencyId }: { db: D1Database; agencyId: string }) {
+  return db.prepare(`SELECT ${BILLING_COLUMNS} FROM agencies WHERE id = ?`).bind(agencyId).first<BillingRow>();
+}
+
+export async function findBillingRowBySubscription({ db, subscriptionId }: { db: D1Database; subscriptionId: string }) {
+  return db
+    .prepare(`SELECT ${BILLING_COLUMNS} FROM agencies WHERE paddle_subscription_id = ?`)
+    .bind(subscriptionId)
+    .first<BillingRow>();
+}
+
+export async function saveSubscription({
+  db,
+  agencyId,
+  plan,
+  status,
+  customerId,
+  subscriptionId,
+  now,
+}: {
+  db: D1Database;
+  agencyId: string;
+  plan: Plan;
+  status: AgencyStatus;
+  customerId: string | null;
+  subscriptionId: string;
+  now: Date;
+}) {
+  await db
+    .prepare(
+      `UPDATE agencies SET plan = ?, status = ?, paddle_customer_id = COALESCE(?, paddle_customer_id),
+         paddle_subscription_id = ?, updated_at = ? WHERE id = ?`,
+    )
+    .bind(plan, status, customerId, subscriptionId, now.toISOString(), agencyId)
+    .run();
+}
+
+export async function expireTrials({ db, now }: { db: D1Database; now: Date }) {
+  const result = await db
+    .prepare(
+      `UPDATE agencies SET status = 'expired', updated_at = ?1
+       WHERE status = 'trialing' AND trial_ends_at IS NOT NULL AND trial_ends_at <= ?1`,
+    )
+    .bind(now.toISOString())
+    .run();
+  return result.meta.changes ?? 0;
+}

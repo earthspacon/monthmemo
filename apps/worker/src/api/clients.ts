@@ -10,7 +10,7 @@ import {
   updateClientRecord,
   type ClientSources,
 } from "../repo/clients";
-import type { ApiContext } from "./context";
+import { requireActivePlan, type ApiContext } from "./context";
 import { loadGoogleSources } from "./google";
 
 const NAME_MAX = 80;
@@ -109,6 +109,7 @@ export const clientRoutes: Route<ApiContext>[] = [
 
   route("POST", "/api/clients", async (context) => {
     const { deps, agency, request } = context;
+    requireActivePlan({ deps, agency });
     const input = readClientInput(await readJson(request));
 
     if ((await countClients({ db: deps.db, agencyId: agency.id })) >= clientLimitOf(agency.plan)) {

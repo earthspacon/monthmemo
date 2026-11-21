@@ -9,6 +9,7 @@ export const meRoutes: Route<ApiContext>[] = [
     const me: MeDto = {
       email: user.email,
       agency: {
+        id: agency.id,
         plan: agency.plan,
         status: agency.status,
         trialEndsAt: agency.trialEndsAt,

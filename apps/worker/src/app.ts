@@ -1,3 +1,4 @@
+import { billingRoutes } from "./api/billing";
 import { brandRoutes } from "./api/brand";
 import { clientRoutes } from "./api/clients";
 import { devRoutes } from "./api/dev";
@@ -7,6 +8,7 @@ import { meRoutes } from "./api/me";
 import { reportRoutes } from "./api/reports";
 import { unsubscribeRoutes } from "./api/unsubscribe";
 import { createAuth } from "./auth";
+import { handlePaddleWebhook } from "./billing/webhook";
 import type { Deps } from "./deps";
 import { isDev } from "./env";
 import { HttpError, errorResponse, matchRoute, type Route } from "./http";
@@ -16,6 +18,7 @@ import { guardAuthRequest } from "./shield/auth-guard";
 export const API_ROUTES: Route<ApiContext>[] = [
   ...meRoutes,
   ...googleRoutes,
+  ...billingRoutes,
   ...brandRoutes,
   ...clientRoutes,
   ...reportRoutes,
@@ -30,6 +33,7 @@ export const ID_ROUTES: { method: string; path: string }[] = API_ROUTES.filter((
 
 const READ_METHODS = new Set(["GET", "HEAD"]);
 const UNSUBSCRIBE_PREFIX = "/u/";
+const PADDLE_WEBHOOK_PATH = "/paddle/webhook";
 const AUTH_PREFIX = "/api/auth/";
 const GOOGLE_CALLBACK_PATH = "/api/auth/callback/google";
 // SPA routes get the app's index.html; every other unknown path is a 404.
@@ -62,6 +66,9 @@ async function routeRequest({ deps, request }: { deps: Deps; request: Request })
   }
   if (pathname.startsWith(UNSUBSCRIBE_PREFIX)) {
     return routeUnsubscribeRequest({ deps, request });
+  }
+  if (pathname === PADDLE_WEBHOOK_PATH && request.method === "POST") {
+    return handlePaddleWebhook({ deps, request });
   }
   if (pathname.startsWith("/dev/")) {
     return routeDevRequest({ deps, request });

@@ -55,6 +55,7 @@ export type ApiError = {
 };
 
 export type AgencySummaryDto = {
+  id: string;
   plan: Plan;
   status: AgencyStatus;
   trialEndsAt: string | null;
