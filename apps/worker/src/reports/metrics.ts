@@ -81,10 +81,7 @@ function ga4TotalsByRange(report: Ga4Report) {
 }
 
 function topGa4Rows({ report }: { report: Ga4Report }) {
-  const rows = (report.rows ?? []).filter((row) => {
-    return rangeOf(row) === CURRENT_RANGE;
-  });
-  return rows
+  return (report.rows ?? [])
     .map((row) => {
       const dimensionValues = row.dimensionValues ?? [];
       return {
@@ -102,6 +99,7 @@ function topGa4Rows({ report }: { report: Ga4Report }) {
 async function readGa4({ google, propertyId, period }: { google: GoogleClient; propertyId: string; period: string }) {
   const current = monthBounds(period);
   const previous = monthBounds(previousPeriodOf(period));
+  // Totals compare two ranges; the top lists use only the reported month, so the row limit is not shared with the earlier one.
   const dateRanges = [
     { ...current, name: CURRENT_RANGE },
     { ...previous, name: PREVIOUS_RANGE },
@@ -115,7 +113,7 @@ async function readGa4({ google, propertyId, period }: { google: GoogleClient; p
     google.runReport({
       propertyId,
       request: {
-        dateRanges,
+        dateRanges: [{ ...current, name: CURRENT_RANGE }],
         metrics,
         dimensions: [{ name: "sessionDefaultChannelGroup" }],
         orderBys: [{ metric: { metricName: "sessions" }, desc: true }],
@@ -125,7 +123,7 @@ async function readGa4({ google, propertyId, period }: { google: GoogleClient; p
     google.runReport({
       propertyId,
       request: {
-        dateRanges,
+        dateRanges: [{ ...current, name: CURRENT_RANGE }],
         metrics,
         dimensions: [{ name: "landingPage" }],
         orderBys: [{ metric: { metricName: "sessions" }, desc: true }],

@@ -283,6 +283,7 @@ type Ga4Request = {
   dimensions?: Array<{ name: string }>;
   metrics?: Array<{ name: string }>;
   limit?: string | number;
+  orderBys?: Array<{ metric?: { metricName: string }; desc?: boolean }>;
 };
 
 // Fixture rows are labelled date_range_0 = the reported month, date_range_1 = the month before; the fake maps them
@@ -331,6 +332,15 @@ function ga4Report({ propertyId, body }: { propertyId: string; body: string }) {
       });
     }
   });
+  // Like GA4: rows of every range are ordered together by the first ordering metric, and only then cut to the limit.
+  const order = request.orderBys?.[0];
+  const orderIndex = order?.metric ? metricNames.indexOf(order.metric.metricName) : -1;
+  if (orderIndex >= 0) {
+    const direction = order?.desc ? -1 : 1;
+    rows.sort((left, right) => {
+      return direction * (Number(left.metricValues[orderIndex].value) - Number(right.metricValues[orderIndex].value));
+    });
+  }
   const limit = request.limit === undefined ? rows.length : Number(request.limit);
   const limited = rows.slice(0, limit);
 

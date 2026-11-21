@@ -74,7 +74,8 @@ describe("Client metrics", () => {
         "totalUsers",
         "keyEvents",
       ]);
-      expect(request.dateRanges).toHaveLength(2);
+      // Totals compare two months; the top-5 lists read only the reported month so the limit is not shared.
+      expect(request.dateRanges).toHaveLength(request.dimensions ? 1 : 2);
     }
     const gscRequests = callsTo(SEARCH_ANALYTICS_PREFIX).map((call) => JSON.parse(call.body));
     expect(gscRequests.length).toBeGreaterThan(0);
