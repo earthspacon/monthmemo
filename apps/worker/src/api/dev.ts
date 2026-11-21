@@ -1,15 +1,19 @@
 import { PLANS, type AgencyStatus, type Plan } from "@monthmemo/contract";
 
 import { createAuth } from "../auth";
+import { GA4_SCOPE, GSC_SCOPE } from "../google/client";
 import { HttpError, json, readJson, readString, route, type Route } from "../http";
 import { newId } from "../ids";
-import { createAgency } from "../repo/agencies";
+import { createAgency, setGoogleNeedsReconnect } from "../repo/agencies";
 import type { PublicContext } from "./context";
 
 const EMAIL_MAX_LENGTH = 254;
 const OUTBOX_LIMIT = 20;
 const STATUSES: AgencyStatus[] = ["trialing", "active", "past_due", "canceled", "expired"];
 const COOKIE_SIGNATURE_BYTES_HASH = { name: "HMAC", hash: "SHA-256" };
+const BASIC_SCOPES = ["openid", "email", "profile"];
+// The fake Google client never sends it anywhere; it only marks the identity as able to refresh.
+const DEV_REFRESH_TOKEN = "dev-refresh-token";
 
 function isPlan(value: unknown): value is Plan {
   return typeof value === "string" && value in PLANS;
@@ -49,6 +53,49 @@ async function ensureUser({ db, email, now }: { db: D1Database; email: string; n
   return row.id;
 }
 
+function readFlag({ data, key, fallback }: { data: Record<string, unknown>; key: string; fallback: boolean }) {
+  const value = data[key];
+
+  if (value === undefined) {
+    return fallback;
+  }
+  if (typeof value !== "boolean") {
+    throw new HttpError(400, "invalid_field", `"${key}" must be true or false`);
+  }
+  return value;
+}
+
+async function upsertGoogleIdentity({
+  db,
+  userId,
+  scope,
+  now,
+}: {
+  db: D1Database;
+  userId: string;
+  scope: string;
+  now: Date;
+}) {
+  const at = now.toISOString();
+  const updated = await db
+    .prepare(
+      "UPDATE auth_identities SET scope = ?, refresh_token = ?, updated_at = ? WHERE user_id = ? AND provider_id = 'google'",
+    )
+    .bind(scope, DEV_REFRESH_TOKEN, at, userId)
+    .run();
+
+  if (updated.meta.changes > 0) {
+    return;
+  }
+  await db
+    .prepare(
+      `INSERT INTO auth_identities (id, provider_account_id, provider_id, user_id, refresh_token, scope, created_at, updated_at)
+       VALUES (?, ?, 'google', ?, ?, ?, ?, ?)`,
+    )
+    .bind(newId(), `dev-${userId}`, userId, DEV_REFRESH_TOKEN, scope, at, at)
+    .run();
+}
+
 // Dev-only: signs a browser in as an agency without Google. Calling it again keeps the agency and sets plan/status.
 export const devRoutes: Route<PublicContext>[] = [
   route("POST", "/dev/session", async ({ deps, request }) => {
@@ -81,6 +128,25 @@ export const devRoutes: Route<PublicContext>[] = [
       `${cookie.name}=${signed}; Path=/; Max-Age=${cookie.attributes.maxAge ?? 2592000}; HttpOnly; SameSite=Lax`,
     );
     return response;
+  }),
+
+  // Dev-only: the signed-in agency's Google grant (which scopes, revoked or not) without a trip to Google.
+  route("POST", "/dev/google", async ({ deps, request }) => {
+    const data = await readJson(request);
+    const session = await createAuth(deps.env).api.getSession({ headers: request.headers });
+
+    if (!session) {
+      throw new HttpError(401, "unauthorized", "Sign in first");
+    }
+    const ga4 = readFlag({ data, key: "ga4", fallback: true });
+    const gsc = readFlag({ data, key: "gsc", fallback: true });
+    const needsReconnect = readFlag({ data, key: "needsReconnect", fallback: false });
+    const scopes = [...BASIC_SCOPES, ...(ga4 ? [GA4_SCOPE] : []), ...(gsc ? [GSC_SCOPE] : [])];
+    const now = deps.now();
+
+    await upsertGoogleIdentity({ db: deps.db, userId: session.user.id, scope: scopes.join(" "), now });
+    await setGoogleNeedsReconnect({ db: deps.db, userId: session.user.id, needsReconnect, now });
+    return json({ ga4, gsc, needsReconnect });
   }),
 
   route("GET", "/dev/outbox", async ({ deps, request }) => {

@@ -1,14 +1,15 @@
 import { devRoutes } from "./api/dev";
 import type { ApiContext, PublicContext } from "./api/context";
+import { CONNECT_PAGE_PATH, googleRoutes } from "./api/google";
 import { meRoutes } from "./api/me";
 import { createAuth } from "./auth";
 import type { Deps } from "./deps";
 import { isDev } from "./env";
 import { HttpError, errorResponse, matchRoute, type Route } from "./http";
-import { getAgencyByUserId } from "./repo/agencies";
+import { getAgencyByUserId, setGoogleNeedsReconnect } from "./repo/agencies";
 import { guardAuthRequest } from "./shield/auth-guard";
 
-export const API_ROUTES: Route<ApiContext>[] = [...meRoutes];
+export const API_ROUTES: Route<ApiContext>[] = [...meRoutes, ...googleRoutes];
 
 // Every route with an `:id` segment; the tenancy test walks it.
 export const ID_ROUTES: { method: string; path: string }[] = API_ROUTES.filter((candidate) => {
@@ -19,6 +20,7 @@ export const ID_ROUTES: { method: string; path: string }[] = API_ROUTES.filter((
 
 const READ_METHODS = new Set(["GET", "HEAD"]);
 const AUTH_PREFIX = "/api/auth/";
+const GOOGLE_CALLBACK_PATH = "/api/auth/callback/google";
 // SPA routes get the app's index.html; every other unknown path is a 404.
 const APP_SHELL_PATH = /^\/(app|app\/.*|sign-in)$/;
 const APP_SHELL_ASSET = "/";
@@ -40,7 +42,12 @@ async function routeRequest({ deps, request }: { deps: Deps; request: Request })
 
   if (pathname.startsWith(AUTH_PREFIX)) {
     await guardAuthRequest({ deps, request });
-    return createAuth(deps.env).handler(request);
+    const response = await createAuth(deps.env).handler(request);
+
+    if (pathname === GOOGLE_CALLBACK_PATH) {
+      await clearReconnectAfterConnect({ deps, request, response });
+    }
+    return response;
   }
   if (pathname.startsWith("/dev/")) {
     return routeDevRequest({ deps, request });
@@ -55,6 +62,33 @@ async function routeRequest({ deps, request }: { deps: Deps; request: Request })
     return deps.env.ASSETS.fetch(request);
   }
   throw new HttpError(404, "not_found", "Not found");
+}
+
+// A connect that came back to the connect page without an error stored fresh tokens, so the old flag is stale.
+async function clearReconnectAfterConnect({
+  deps,
+  request,
+  response,
+}: {
+  deps: Deps;
+  request: Request;
+  response: Response;
+}) {
+  const location = response.headers.get("location");
+
+  if (!location) {
+    return;
+  }
+  const target = new URL(location, deps.env.APP_URL);
+
+  if (target.pathname !== CONNECT_PAGE_PATH || target.searchParams.has("error")) {
+    return;
+  }
+  const session = await createAuth(deps.env).api.getSession({ headers: request.headers });
+
+  if (session) {
+    await setGoogleNeedsReconnect({ db: deps.db, userId: session.user.id, needsReconnect: false, now: deps.now() });
+  }
 }
 
 async function routeDevRequest({ deps, request }: { deps: Deps; request: Request }) {

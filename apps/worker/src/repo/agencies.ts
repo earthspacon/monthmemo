@@ -15,6 +15,7 @@ export type AgencyRow = {
   status: AgencyStatus;
   trialEndsAt: string | null;
   displayName: string;
+  googleNeedsReconnect: boolean;
 };
 
 function nextRunAfter(from: Date) {
@@ -63,13 +64,36 @@ export async function createAgency({
 }
 
 export async function getAgencyByUserId({ db, userId }: { db: D1Database; userId: string }) {
-  return db
+  const row = await db
     .prepare(
-      `SELECT id, user_id AS userId, plan, status, trial_ends_at AS trialEndsAt, display_name AS displayName
+      `SELECT id, user_id AS userId, plan, status, trial_ends_at AS trialEndsAt, display_name AS displayName,
+         google_needs_reconnect AS googleNeedsReconnect
        FROM agencies WHERE user_id = ?`,
     )
     .bind(userId)
-    .first<AgencyRow>();
+    .first<Omit<AgencyRow, "googleNeedsReconnect"> & { googleNeedsReconnect: number }>();
+
+  if (!row) {
+    return null;
+  }
+  return { ...row, googleNeedsReconnect: row.googleNeedsReconnect === 1 };
+}
+
+export async function setGoogleNeedsReconnect({
+  db,
+  userId,
+  needsReconnect,
+  now,
+}: {
+  db: D1Database;
+  userId: string;
+  needsReconnect: boolean;
+  now: Date;
+}) {
+  await db
+    .prepare("UPDATE agencies SET google_needs_reconnect = ?, updated_at = ? WHERE user_id = ?")
+    .bind(needsReconnect ? 1 : 0, now.toISOString(), userId)
+    .run();
 }
 
 export async function countClients({ db, agencyId }: { db: D1Database; agencyId: string }) {

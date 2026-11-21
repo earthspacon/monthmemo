@@ -3,14 +3,17 @@ import { LogOut } from "lucide-react";
 import { useEffect } from "react";
 import { Navigate, NavLink, Outlet, useLocation } from "react-router-dom";
 
+import { googleStatusRequested } from "../connect/model";
 import { $sessionError, $sessionStatus, appStarted, signOutClicked } from "../session/model";
 import { BUTTON_SECONDARY, ErrorState, LoadingState } from "../shared/ui";
+import { ReconnectBanner } from "./ReconnectBanner";
 
 const NAV = [
   { to: "/app/reports", label: "Reports" },
   { to: "/app/clients", label: "Clients" },
   { to: "/app/brand", label: "Brand" },
   { to: "/app/billing", label: "Billing" },
+  { to: "/app/connect", label: "Google" },
 ];
 
 // Sends a visitor without a session to the sign-in page and brings them back afterwards.
@@ -35,7 +38,11 @@ export const RequireSession = () => {
 };
 
 export const AppShell = () => {
-  const { signOut } = useUnit({ signOut: signOutClicked });
+  const { signOut, loadGoogleStatus } = useUnit({ signOut: signOutClicked, loadGoogleStatus: googleStatusRequested });
+
+  useEffect(() => {
+    loadGoogleStatus();
+  }, [loadGoogleStatus]);
 
   return (
     <div className="mx-auto min-h-dvh max-w-5xl p-4">
@@ -54,6 +61,7 @@ export const AppShell = () => {
           Sign out
         </button>
       </header>
+      <ReconnectBanner />
       <Outlet />
     </div>
   );

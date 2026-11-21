@@ -1,31 +1,61 @@
 import { betterAuth } from "better-auth";
 import { APIError } from "better-auth/api";
+import { refreshAccessToken } from "better-auth/oauth2";
 
 import type { Env } from "./env";
 import { createAgency } from "./repo/agencies";
 import { isDisposableEmail } from "./shield/disposable";
 
 const SESSION_TTL_SECONDS = 30 * 24 * 60 * 60;
+const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
+const INVALID_GRANT = "invalid_grant";
 const TIMESTAMPS = {
   createdAt: "created_at",
   updatedAt: "updated_at",
 };
 
-function buildSocialProviders(env: Env) {
-  if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) {
+export type AuthHooks = {
+  // Google refused the stored refresh token (revoked or expired): only a new consent brings access back.
+  onRefreshRejected?: () => void;
+};
+
+function isInvalidGrant(error: unknown) {
+  return typeof error === "object" && error !== null && "error" in error && error.error === INVALID_GRANT;
+}
+
+function buildSocialProviders({ env, hooks }: { env: Env; hooks: AuthHooks }) {
+  const clientId = env.GOOGLE_CLIENT_ID;
+  const clientSecret = env.GOOGLE_CLIENT_SECRET;
+
+  if (!clientId || !clientSecret) {
     return {};
   }
   return {
     // Default scopes only (openid email profile): reading Google Analytics is a separate connect step.
     google: {
-      clientId: env.GOOGLE_CLIENT_ID,
-      clientSecret: env.GOOGLE_CLIENT_SECRET,
+      clientId,
+      clientSecret,
       prompt: "select_account" as const,
+      // Better Auth's own refresh, except that a rejected refresh token is reported before the error is swallowed.
+      refreshAccessToken: async (refreshToken: string) => {
+        try {
+          return await refreshAccessToken({
+            refreshToken,
+            options: { clientId, clientSecret },
+            tokenEndpoint: GOOGLE_TOKEN_URL,
+          });
+        } catch (error) {
+          if (isInvalidGrant(error)) {
+            hooks.onRefreshRejected?.();
+          }
+          throw error;
+        }
+      },
     },
   };
 }
 
-export function createAuth(env: Env) {
+export function createAuth(env: Env, hooks: AuthHooks = {}) {
   return betterAuth({
     database: env.DB,
     baseURL: env.APP_URL,
@@ -54,7 +84,7 @@ export function createAuth(env: Env) {
         ...TIMESTAMPS,
       },
     },
-    socialProviders: buildSocialProviders(env),
+    socialProviders: buildSocialProviders({ env, hooks }),
     account: {
       // Google verifies the email, so a Google sign-in with the same address joins the existing user.
       accountLinking: {
