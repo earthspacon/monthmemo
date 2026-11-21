@@ -1,6 +1,8 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 
 import { BillingPage } from "../pages/BillingPage";
+import { BrandPage } from "../pages/BrandPage";
+import { ClientsPage } from "../pages/ClientsPage";
 import { ConnectPage } from "../pages/ConnectPage";
 import { ReportPage } from "../pages/ReportPage";
 import { ReportsPage } from "../pages/ReportsPage";
@@ -45,6 +47,8 @@ export const AppRoutes = () => {
           <Route element={<AppShell />}>
             <Route index element={<Navigate to="/app/reports" replace />} />
             <Route path="connect" element={<ConnectPage />} />
+            <Route path="clients" element={<ClientsPage />} />
+            <Route path="brand" element={<BrandPage />} />
             <Route path="billing" element={<BillingPage />} />
             <Route path="reports" element={<ReportsPage />} />
             <Route path="reports/:id" element={<ReportPage />} />
