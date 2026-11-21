@@ -19,6 +19,7 @@ import {
 } from "../repo/reports";
 import { claimOwnerAlert, readDailyUsage, recordUsage } from "../repo/usage";
 import { buildClientMetrics } from "./metrics";
+import { processSendingReports } from "./send";
 
 export const JOBS_CRON = "* * * * *";
 
@@ -51,6 +52,7 @@ export async function processPendingReports({ deps }: { deps: Deps }) {
   for (const { agencyId, period } of touched.values()) {
     await sendAgencyNotices({ deps, agencyId, period });
   }
+  await processSendingReports({ deps });
 }
 
 async function processReport({ deps, report }: { deps: Deps; report: PendingReport }) {

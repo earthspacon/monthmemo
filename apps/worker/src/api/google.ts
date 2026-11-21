@@ -40,6 +40,36 @@ function toGscSites(entries: SiteEntry[]): GoogleSourcesDto["gsc"] {
     });
 }
 
+export async function loadGoogleSources({
+  deps,
+  user,
+  agency,
+}: Pick<ApiContext, "deps" | "user" | "agency">): Promise<GoogleSourcesDto> {
+  if (agency.googleNeedsReconnect) {
+    throw new GoogleReconnectNeeded();
+  }
+  const identity = await findGoogleIdentity({ db: deps.db, userId: user.id });
+  const granted = grantedSources(identity?.scope ?? null);
+
+  if (!granted.ga4 && !granted.gsc) {
+    throw new GoogleNotConnected();
+  }
+  const google = await createGoogleClientFor({ deps, userId: user.id });
+
+  try {
+    const [summaries, sites] = await Promise.all([
+      granted.ga4 ? google.listAccountSummaries() : Promise.resolve([]),
+      granted.gsc ? google.listSites() : Promise.resolve([]),
+    ]);
+    return { ga4: toGa4Properties(summaries), gsc: toGscSites(sites) };
+  } catch (error) {
+    if (error instanceof GoogleApiError) {
+      throw new HttpError(502, "google_error", "Google didn't answer. Try again in a minute.");
+    }
+    throw error;
+  }
+}
+
 export const googleRoutes: Route<ApiContext>[] = [
   // Links the two read scopes to the signed-in Google user; Google is asked for a refresh token every time.
   route("POST", "/api/google/connect", async ({ deps, request }) => {
@@ -69,29 +99,6 @@ export const googleRoutes: Route<ApiContext>[] = [
   }),
 
   route("GET", "/api/google/sources", async ({ deps, user, agency }) => {
-    if (agency.googleNeedsReconnect) {
-      throw new GoogleReconnectNeeded();
-    }
-    const identity = await findGoogleIdentity({ db: deps.db, userId: user.id });
-    const granted = grantedSources(identity?.scope ?? null);
-
-    if (!granted.ga4 && !granted.gsc) {
-      throw new GoogleNotConnected();
-    }
-    const google = await createGoogleClientFor({ deps, userId: user.id });
-
-    try {
-      const [summaries, sites] = await Promise.all([
-        granted.ga4 ? google.listAccountSummaries() : Promise.resolve([]),
-        granted.gsc ? google.listSites() : Promise.resolve([]),
-      ]);
-      const sources: GoogleSourcesDto = { ga4: toGa4Properties(summaries), gsc: toGscSites(sites) };
-      return json(sources);
-    } catch (error) {
-      if (error instanceof GoogleApiError) {
-        throw new HttpError(502, "google_error", "Google didn't answer. Try again in a minute.");
-      }
-      throw error;
-    }
+    return json(await loadGoogleSources({ deps, user, agency }));
   }),
 ];

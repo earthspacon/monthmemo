@@ -1,4 +1,4 @@
-import { PLANS, TRIAL_DAYS, type AgencyStatus, type Plan } from "@monthmemo/contract";
+import { PLANS, TRIAL_DAYS, type AgencyStatus, type BrandDto, type Plan } from "@monthmemo/contract";
 
 import { newId } from "../ids";
 
@@ -18,7 +18,7 @@ export type AgencyRow = {
   googleNeedsReconnect: boolean;
 };
 
-function nextRunAfter(from: Date) {
+export function nextRunAfter(from: Date) {
   const thisMonth = new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), RUN_DAY, RUN_HOUR_UTC));
   if (thisMonth.getTime() > from.getTime()) {
     return thisMonth;
@@ -106,4 +106,33 @@ export async function countClients({ db, agencyId }: { db: D1Database; agencyId:
 
 export function clientLimitOf(plan: Plan) {
   return PLANS[plan].clientLimit;
+}
+
+export async function getBrand({ db, agencyId }: { db: D1Database; agencyId: string }) {
+  return db
+    .prepare(
+      `SELECT display_name AS displayName, accent_color AS accentColor, logo_url AS logoUrl, reply_to AS replyTo
+       FROM agencies WHERE id = ?`,
+    )
+    .bind(agencyId)
+    .first<BrandDto>();
+}
+
+export async function updateBrand({
+  db,
+  agencyId,
+  brand,
+  now,
+}: {
+  db: D1Database;
+  agencyId: string;
+  brand: BrandDto;
+  now: Date;
+}) {
+  await db
+    .prepare(
+      `UPDATE agencies SET display_name = ?, accent_color = ?, logo_url = ?, reply_to = ?, updated_at = ? WHERE id = ?`,
+    )
+    .bind(brand.displayName, brand.accentColor, brand.logoUrl, brand.replyTo, now.toISOString(), agencyId)
+    .run();
 }

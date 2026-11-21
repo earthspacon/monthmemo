@@ -62,7 +62,9 @@ export const AppShell = () => {
         </button>
       </header>
       <ReconnectBanner />
-      <Outlet />
+      <main>
+        <Outlet />
+      </main>
     </div>
   );
 };

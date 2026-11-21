@@ -1,7 +1,11 @@
+import { brandRoutes } from "./api/brand";
+import { clientRoutes } from "./api/clients";
 import { devRoutes } from "./api/dev";
 import type { ApiContext, PublicContext } from "./api/context";
 import { CONNECT_PAGE_PATH, googleRoutes } from "./api/google";
 import { meRoutes } from "./api/me";
+import { reportRoutes } from "./api/reports";
+import { unsubscribeRoutes } from "./api/unsubscribe";
 import { createAuth } from "./auth";
 import type { Deps } from "./deps";
 import { isDev } from "./env";
@@ -9,7 +13,13 @@ import { HttpError, errorResponse, matchRoute, type Route } from "./http";
 import { getAgencyByUserId, setGoogleNeedsReconnect } from "./repo/agencies";
 import { guardAuthRequest } from "./shield/auth-guard";
 
-export const API_ROUTES: Route<ApiContext>[] = [...meRoutes, ...googleRoutes];
+export const API_ROUTES: Route<ApiContext>[] = [
+  ...meRoutes,
+  ...googleRoutes,
+  ...brandRoutes,
+  ...clientRoutes,
+  ...reportRoutes,
+];
 
 // Every route with an `:id` segment; the tenancy test walks it.
 export const ID_ROUTES: { method: string; path: string }[] = API_ROUTES.filter((candidate) => {
@@ -19,6 +29,7 @@ export const ID_ROUTES: { method: string; path: string }[] = API_ROUTES.filter((
 });
 
 const READ_METHODS = new Set(["GET", "HEAD"]);
+const UNSUBSCRIBE_PREFIX = "/u/";
 const AUTH_PREFIX = "/api/auth/";
 const GOOGLE_CALLBACK_PATH = "/api/auth/callback/google";
 // SPA routes get the app's index.html; every other unknown path is a 404.
@@ -48,6 +59,9 @@ async function routeRequest({ deps, request }: { deps: Deps; request: Request })
       await clearReconnectAfterConnect({ deps, request, response });
     }
     return response;
+  }
+  if (pathname.startsWith(UNSUBSCRIBE_PREFIX)) {
+    return routeUnsubscribeRequest({ deps, request });
   }
   if (pathname.startsWith("/dev/")) {
     return routeDevRequest({ deps, request });
@@ -89,6 +103,15 @@ async function clearReconnectAfterConnect({
   if (session) {
     await setGoogleNeedsReconnect({ db: deps.db, userId: session.user.id, needsReconnect: false, now: deps.now() });
   }
+}
+
+async function routeUnsubscribeRequest({ deps, request }: { deps: Deps; request: Request }) {
+  const match = matchRoute<PublicContext>({ routes: unsubscribeRoutes, request });
+
+  if (!match) {
+    throw new HttpError(404, "not_found", "Not found");
+  }
+  return match.route.handler({ deps, request, params: match.params });
 }
 
 async function routeDevRequest({ deps, request }: { deps: Deps; request: Request }) {

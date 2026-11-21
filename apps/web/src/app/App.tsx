@@ -1,6 +1,8 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 
 import { ConnectPage } from "../pages/ConnectPage";
+import { ReportPage } from "../pages/ReportPage";
+import { ReportsPage } from "../pages/ReportsPage";
 import { SignInPage } from "../pages/SignInPage";
 import { Card } from "../shared/ui";
 import { AppShell, RequireSession } from "./AppShell";
@@ -19,6 +21,8 @@ export const App = () => {
           <Route element={<AppShell />}>
             <Route index element={<Navigate to="/app/reports" replace />} />
             <Route path="connect" element={<ConnectPage />} />
+            <Route path="reports" element={<ReportsPage />} />
+            <Route path="reports/:id" element={<ReportPage />} />
             <Route path="*" element={<NotBuiltYet />} />
           </Route>
         </Route>

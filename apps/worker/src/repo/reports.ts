@@ -257,3 +257,215 @@ export async function seedReport({
   }
   return row.id;
 }
+export type ReportListRow = {
+  id: string;
+  clientId: string;
+  clientName: string;
+  period: string;
+  status: ReportStatus;
+  failureReason: FailureReason | null;
+  sentAt: string | null;
+  recipientCount: number;
+};
+
+export type ReportDetailRow = ReportListRow & {
+  metricsJson: string | null;
+  narrative: string | null;
+};
+
+export type ReportRecipient = {
+  id: string;
+  email: string;
+  token: string;
+};
+
+export type SendingReport = {
+  id: string;
+  agencyId: string;
+  clientId: string;
+  period: string;
+  status: ReportStatus;
+  metricsJson: string | null;
+  narrative: string | null;
+  clientName: string;
+};
+
+const DELIVERY_COUNT = "(SELECT COUNT(*) FROM report_deliveries WHERE report_id = reports.id)";
+const REPORT_LIST_COLUMNS = `reports.id, reports.client_id AS clientId, clients.name AS clientName, reports.period,
+  reports.status, reports.failure_reason AS failureReason, reports.sent_at AS sentAt,
+  ${DELIVERY_COUNT} AS recipientCount`;
+
+export async function listReports({
+  db,
+  agencyId,
+  period,
+}: {
+  db: D1Database;
+  agencyId: string;
+  period: string | null;
+}) {
+  const { results } = await db
+    .prepare(
+      `SELECT ${REPORT_LIST_COLUMNS}
+       FROM reports
+       JOIN clients ON clients.id = reports.client_id
+       WHERE reports.agency_id = ? AND (? IS NULL OR reports.period = ?)
+       ORDER BY reports.period DESC, clients.name, reports.id`,
+    )
+    .bind(agencyId, period, period)
+    .all<ReportListRow>();
+  return results ?? [];
+}
+
+export async function listReportPeriods({ db, agencyId }: { db: D1Database; agencyId: string }) {
+  const { results } = await db
+    .prepare("SELECT DISTINCT period FROM reports WHERE agency_id = ? ORDER BY period DESC")
+    .bind(agencyId)
+    .all<{ period: string }>();
+  return (results ?? []).map((row) => {
+    return row.period;
+  });
+}
+
+export async function findReportDetail({ db, agencyId, id }: { db: D1Database; agencyId: string; id: string }) {
+  return db
+    .prepare(
+      `SELECT ${REPORT_LIST_COLUMNS}, reports.metrics_json AS metricsJson, reports.narrative
+       FROM reports
+       JOIN clients ON clients.id = reports.client_id
+       WHERE reports.id = ? AND reports.agency_id = ?`,
+    )
+    .bind(id, agencyId)
+    .first<ReportDetailRow>();
+}
+
+export async function markReportSending({ db, id, now }: { db: D1Database; id: string; now: string }) {
+  const result = await db
+    .prepare("UPDATE reports SET status = 'sending', updated_at = ? WHERE id = ? AND status = 'draft'")
+    .bind(now, id)
+    .run();
+  return (result.meta.changes ?? 0) > 0;
+}
+
+export async function markReportSkipped({ db, id, now }: { db: D1Database; id: string; now: string }) {
+  const result = await db
+    .prepare("UPDATE reports SET status = 'skipped', updated_at = ? WHERE id = ? AND status = 'draft'")
+    .bind(now, id)
+    .run();
+  return (result.meta.changes ?? 0) > 0;
+}
+
+export async function listSendingReports({ db, limit }: { db: D1Database; limit: number }) {
+  const { results } = await db
+    .prepare(
+      `SELECT reports.id, reports.agency_id AS agencyId, reports.client_id AS clientId, reports.period,
+         reports.status, reports.metrics_json AS metricsJson, reports.narrative, clients.name AS clientName
+       FROM reports
+       JOIN clients ON clients.id = reports.client_id
+       WHERE reports.status = 'sending'
+       ORDER BY reports.updated_at, reports.id
+       LIMIT ?`,
+    )
+    .bind(limit)
+    .all<SendingReport>();
+  return results ?? [];
+}
+
+export async function listUndeliveredRecipients({
+  db,
+  reportId,
+  clientId,
+}: {
+  db: D1Database;
+  reportId: string;
+  clientId: string;
+}) {
+  const { results } = await db
+    .prepare(
+      `SELECT recipients.id, recipients.email, recipients.unsubscribe_token AS token
+       FROM recipients
+       WHERE recipients.client_id = ? AND recipients.unsubscribed_at IS NULL
+         AND NOT EXISTS (
+           SELECT 1 FROM report_deliveries
+           WHERE report_deliveries.report_id = ? AND report_deliveries.recipient_id = recipients.id
+         )
+       ORDER BY recipients.rowid`,
+    )
+    .bind(clientId, reportId)
+    .all<ReportRecipient>();
+  return results ?? [];
+}
+
+export async function listFirstRecipient({ db, clientId }: { db: D1Database; clientId: string }) {
+  return db
+    .prepare(
+      `SELECT id, email, unsubscribe_token AS token FROM recipients
+       WHERE client_id = ? ORDER BY rowid LIMIT 1`,
+    )
+    .bind(clientId)
+    .first<ReportRecipient>();
+}
+
+export async function insertDelivery({
+  db,
+  reportId,
+  recipientId,
+  now,
+}: {
+  db: D1Database;
+  reportId: string;
+  recipientId: string;
+  now: string;
+}) {
+  await db
+    .prepare("INSERT OR IGNORE INTO report_deliveries (report_id, recipient_id, sent_at) VALUES (?, ?, ?)")
+    .bind(reportId, recipientId, now)
+    .run();
+}
+
+export async function countUndeliveredRecipients({
+  db,
+  reportId,
+  clientId,
+}: {
+  db: D1Database;
+  reportId: string;
+  clientId: string;
+}) {
+  const row = await db
+    .prepare(
+      `SELECT COUNT(*) AS count FROM recipients
+       WHERE client_id = ? AND unsubscribed_at IS NULL
+         AND NOT EXISTS (
+           SELECT 1 FROM report_deliveries
+           WHERE report_deliveries.report_id = ? AND report_deliveries.recipient_id = recipients.id
+         )`,
+    )
+    .bind(clientId, reportId)
+    .first<{ count: number }>();
+  return row?.count ?? 0;
+}
+
+export async function markReportSent({ db, id, now }: { db: D1Database; id: string; now: string }) {
+  await db
+    .prepare("UPDATE reports SET status = 'sent', sent_at = ?, updated_at = ? WHERE id = ? AND status = 'sending'")
+    .bind(now, now, id)
+    .run();
+}
+
+export async function incrementReportAttempts({ db, id, now }: { db: D1Database; id: string; now: string }) {
+  const row = await db
+    .prepare(
+      "UPDATE reports SET attempts = attempts + 1, updated_at = ? WHERE id = ? AND status = 'sending' RETURNING attempts",
+    )
+    .bind(now, id)
+    .first<{ attempts: number }>();
+  return row?.attempts ?? 0;
+}
+
+export async function markReportSendFailed({ db, id, now }: { db: D1Database; id: string; now: string }) {
+  await db
+    .prepare("UPDATE reports SET status = 'send_failed', updated_at = ? WHERE id = ? AND status = 'sending'")
+    .bind(now, id)
+    .run();
+}
