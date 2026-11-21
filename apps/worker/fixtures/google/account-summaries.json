@@ -1,0 +1,30 @@
+{
+  "accountSummaries": [
+    {
+      "name": "accountSummaries/201000001",
+      "account": "accounts/201000001",
+      "displayName": "Example Bakery LLC",
+      "propertySummaries": [
+        {
+          "property": "properties/310000001",
+          "displayName": "Example Bakery - GA4",
+          "propertyType": "PROPERTY_TYPE_ORDINARY",
+          "parent": "accounts/201000001"
+        }
+      ]
+    },
+    {
+      "name": "accountSummaries/201000002",
+      "account": "accounts/201000002",
+      "displayName": "Northside Dental",
+      "propertySummaries": [
+        {
+          "property": "properties/310000002",
+          "displayName": "northsidedental.com",
+          "propertyType": "PROPERTY_TYPE_ORDINARY",
+          "parent": "accounts/201000002"
+        }
+      ]
+    }
+  ]
+}

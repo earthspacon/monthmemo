@@ -11,6 +11,7 @@
     "test:e2e": "vitest run --config vitest.e2e.config.ts"
   },
   "dependencies": {
+    "@monthmemo/contract": "workspace:*",
     "effector": "^23.4.4",
     "effector-react": "^23.3.0",
     "lucide-react": "^1.77.0",

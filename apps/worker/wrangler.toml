@@ -1,0 +1,85 @@
+#:schema node_modules/wrangler/config-schema.json
+name = "monthmemo"
+main = "src/index.ts"
+compatibility_date = "2026-11-01"
+compatibility_flags = ["nodejs_compat"]
+
+# The SPA (apps/web build) is served from the same origin; API, auth, unsubscribe and dev routes hit the Worker first.
+[assets]
+directory = "../web/dist"
+binding = "ASSETS"
+not_found_handling = "none"
+run_worker_first = ["/api/*", "/dev/*", "/paddle/*", "/u/*", "/app", "/app/*", "/sign-in"]
+
+# Per-minute limit on auth writes (the binding only supports 10 s or 60 s windows). Unsubscribe posts use D1.
+[[ratelimits]]
+name = "AUTH_LIMITER"
+namespace_id = "1001"
+simple = { limit = 30, period = 60 }
+
+[[d1_databases]]
+binding = "DB"
+database_name = "monthmemo"
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "migrations"
+
+# 4th of the month 06:00 UTC: monthly run (Search Console lags 2-3 days). Every minute: report jobs. Hourly: maintenance.
+[triggers]
+crons = ["0 6 4 * *", "* * * * *", "0 * * * *"]
+
+# Secrets, set with `wrangler secret put <NAME> --env production` (locally in .dev.vars):
+#   BETTER_AUTH_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, ANTHROPIC_API_KEY, RESEND_API_KEY,
+#   PADDLE_API_KEY, PADDLE_WEBHOOK_SECRET, TURNSTILE_SECRET_KEY
+# Local defaults below; `--env production` uses the block at the end.
+[vars]
+APP_URL = "http://localhost:8787"
+MAIL_FROM = "MonthMemo <reports@monthmemo.example>"
+DEV_ROUTES = "0"
+GOOGLE_FAKE = "0"
+PADDLE_ENV = "sandbox"
+PADDLE_CLIENT_TOKEN = ""
+PADDLE_PRICE_STARTER = "pri_starter_example"
+PADDLE_PRICE_GROWTH = "pri_growth_example"
+LLM_DAILY_USD_CAP = "5"
+LLM_AGENCY_DAILY_USD_CAP = "0.10"
+OWNER_ALERT_EMAIL = "owner@monthmemo.example"
+TURNSTILE_SITE_KEY = "1x00000000000000000000AA"
+
+# Production: `wrangler deploy --env production`. Bindings aren't inherited, so they are repeated here.
+[env.production]
+name = "monthmemo"
+routes = [{ pattern = "monthmemo.com", custom_domain = true }]
+
+[env.production.assets]
+directory = "../web/dist"
+binding = "ASSETS"
+not_found_handling = "none"
+run_worker_first = ["/api/*", "/dev/*", "/paddle/*", "/u/*", "/app", "/app/*", "/sign-in"]
+
+[[env.production.ratelimits]]
+name = "AUTH_LIMITER"
+namespace_id = "1001"
+simple = { limit = 30, period = 60 }
+
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "monthmemo"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"
+migrations_dir = "migrations"
+
+[env.production.triggers]
+crons = ["0 6 4 * *", "* * * * *", "0 * * * *"]
+
+[env.production.vars]
+APP_URL = "https://monthmemo.com"
+MAIL_FROM = "MonthMemo <reports@mail.monthmemo.com>"
+DEV_ROUTES = "0"
+GOOGLE_FAKE = "0"
+PADDLE_ENV = "production"
+PADDLE_CLIENT_TOKEN = "REPLACE_WITH_PADDLE_CLIENT_TOKEN"
+PADDLE_PRICE_STARTER = "REPLACE_WITH_PRICE_ID"
+PADDLE_PRICE_GROWTH = "REPLACE_WITH_PRICE_ID"
+LLM_DAILY_USD_CAP = "5"
+LLM_AGENCY_DAILY_USD_CAP = "0.10"
+OWNER_ALERT_EMAIL = "REPLACE_WITH_OWNER_EMAIL"
+TURNSTILE_SITE_KEY = "REPLACE_WITH_TURNSTILE_SITE_KEY"

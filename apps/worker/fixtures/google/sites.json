@@ -1,0 +1,16 @@
+{
+  "siteEntry": [
+    {
+      "siteUrl": "https://examplebakery.com/",
+      "permissionLevel": "siteOwner"
+    },
+    {
+      "siteUrl": "sc-domain:northsidedental.com",
+      "permissionLevel": "siteFullUser"
+    },
+    {
+      "siteUrl": "https://old-landing.example/",
+      "permissionLevel": "siteUnverifiedUser"
+    }
+  ]
+}
