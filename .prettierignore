@@ -1,0 +1,5 @@
+pnpm-lock.yaml
+**/dist
+**/.wrangler
+**/dist-prerender
+apps/worker/fixtures
