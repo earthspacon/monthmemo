@@ -134,7 +134,12 @@ describe("Review and send", () => {
   it("MM-R21 two reports failing in one period send two notices", async () => {
     const { cookie, profile, agencyId, reportId, recipients } = await agencyWithDraft();
     const second = await seedClient({ agencyId, name: "Harbor Yoga", recipients: [uniqueEmail("client")] });
-    const secondId = await seedReport({ agencyId, clientId: second.clientId, period: fake.currentPeriod, status: "draft" });
+    const secondId = await seedReport({
+      agencyId,
+      clientId: second.clientId,
+      period: fake.currentPeriod,
+      status: "draft",
+    });
     fake.failingRecipients.add(recipients[0].email);
     fake.failingRecipients.add(second.recipients[0].email);
 

@@ -182,7 +182,12 @@ describe("Monthly run", () => {
   it("MM-R13 a report stuck in building for 15 min is rebuilt", async () => {
     const agency = await createConnectedAgency();
     const { clientId } = await seedClient({ agencyId: agency.agencyId, name: "Example Bakery" });
-    const stuck = await seedReport({ agencyId: agency.agencyId, clientId, period: fake.currentPeriod, status: "pending" });
+    const stuck = await seedReport({
+      agencyId: agency.agencyId,
+      clientId,
+      period: fake.currentPeriod,
+      status: "pending",
+    });
     const fresh = await seedReport({
       agencyId: agency.agencyId,
       clientId: (await seedClient({ agencyId: agency.agencyId, name: "Harbor Yoga" })).clientId,
