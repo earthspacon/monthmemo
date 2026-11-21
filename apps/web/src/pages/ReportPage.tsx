@@ -3,6 +3,7 @@ import { useGate, useUnit } from "effector-react";
 import { AlertTriangle } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 
+import { formatPeriod, formatSentDay, recipientLabel, STATUS_LABELS } from "../reports/format";
 import {
   $approving,
   $planInactive,
@@ -17,32 +18,6 @@ import {
   skipClicked,
 } from "../reports/model";
 import { BUTTON_PRIMARY, BUTTON_SECONDARY, Banner, Card, ErrorState, PageHeader, SkeletonRows } from "../shared/ui";
-import { formatPeriod } from "./ReportsPage";
-
-const SENT_DAY_FORMAT = new Intl.DateTimeFormat("en-US", {
-  year: "numeric",
-  month: "short",
-  day: "numeric",
-});
-
-const STATUS_LABELS: Record<ReportStatus, string> = {
-  pending: "Writing",
-  building: "Writing",
-  draft: "Draft",
-  failed: "Failed",
-  sending: "Sending",
-  sent: "Sent",
-  send_failed: "Email failed",
-  skipped: "Skipped",
-};
-
-function formatSentDay(iso: string) {
-  return SENT_DAY_FORMAT.format(new Date(iso));
-}
-
-function recipientLabel(count: number) {
-  return count === 1 ? "1 recipient" : `${count} recipients`;
-}
 
 const PlanNotice = () => {
   return (

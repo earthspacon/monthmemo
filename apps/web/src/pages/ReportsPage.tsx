@@ -2,14 +2,9 @@ import type { FailureReason, ReportListItemDto, ReportStatus } from "@monthmemo/
 import { useGate, useUnit } from "effector-react";
 import { Link } from "react-router-dom";
 
+import { formatPeriod, formatSentDay, recipientLabel, STATUS_LABELS } from "../reports/format";
 import { $reportsError, $reportsPage, $reportsStatus, ReportsGate, reportsRequested } from "../reports/model";
 import { Card, ErrorState, PageHeader, SkeletonRows } from "../shared/ui";
-
-const PERIOD_FORMAT = new Intl.DateTimeFormat("en-GB", {
-  month: "long",
-  year: "numeric",
-  timeZone: "UTC",
-});
 
 const RUN_DAY_FORMAT = new Intl.DateTimeFormat("en-GB", {
   day: "numeric",
@@ -17,23 +12,6 @@ const RUN_DAY_FORMAT = new Intl.DateTimeFormat("en-GB", {
   year: "numeric",
   timeZone: "UTC",
 });
-
-const SENT_DAY_FORMAT = new Intl.DateTimeFormat("en-US", {
-  year: "numeric",
-  month: "short",
-  day: "numeric",
-});
-
-const STATUS_LABELS: Record<ReportStatus, string> = {
-  pending: "Writing",
-  building: "Writing",
-  draft: "Draft",
-  failed: "Failed",
-  sending: "Sending",
-  sent: "Sent",
-  send_failed: "Email failed",
-  skipped: "Skipped",
-};
 
 const FAILURE_LABELS: Record<FailureReason, string> = {
   google_reconnect_needed: "Google access needs to be reconnected",
@@ -53,20 +31,8 @@ const STATUS_TONES: Record<ReportStatus, string> = {
   skipped: "bg-slate-100 text-slate-600",
 };
 
-export function formatPeriod(period: string) {
-  return PERIOD_FORMAT.format(new Date(`${period}-01T00:00:00Z`));
-}
-
 function formatRunDay(iso: string) {
   return RUN_DAY_FORMAT.format(new Date(`${iso}T00:00:00Z`));
-}
-
-function formatSentDay(iso: string) {
-  return SENT_DAY_FORMAT.format(new Date(iso));
-}
-
-function recipientLabel(count: number) {
-  return count === 1 ? "1 recipient" : `${count} recipients`;
 }
 
 function StatusBadge({ status }: { status: ReportStatus }) {
