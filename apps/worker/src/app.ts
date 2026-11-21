@@ -40,15 +40,44 @@ const GOOGLE_CALLBACK_PATH = "/api/auth/callback/google";
 const APP_SHELL_PATH = /^\/(app|app\/.*|sign-in)$/;
 const APP_SHELL_ASSET = "/";
 
+const APP_CSP = [
+  "default-src 'self'",
+  "script-src 'self' https://challenges.cloudflare.com https://cdn.paddle.com",
+  "style-src 'self' 'unsafe-inline' https://cdn.paddle.com",
+  "img-src 'self' data: https:",
+  "font-src 'self' data:",
+  "connect-src 'self' https://challenges.cloudflare.com https://*.paddle.com",
+  "frame-src https://challenges.cloudflare.com https://*.paddle.com",
+  "frame-ancestors 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "object-src 'none'",
+].join("; ");
+const HSTS = "max-age=63072000; includeSubDomains; preload";
+const REFERRER_POLICY = "strict-origin-when-cross-origin";
+
+// Responses from assets or proxies can be immutable, so the headers go onto a copy.
+function withSecurityHeaders(response: Response) {
+  const secured = new Response(response.body, response);
+
+  if (!secured.headers.has("content-security-policy")) {
+    secured.headers.set("content-security-policy", APP_CSP);
+  }
+  secured.headers.set("strict-transport-security", HSTS);
+  secured.headers.set("x-content-type-options", "nosniff");
+  secured.headers.set("referrer-policy", REFERRER_POLICY);
+  return secured;
+}
+
 export async function handleRequest({ deps, request }: { deps: Deps; request: Request }) {
   try {
-    return await routeRequest({ deps, request });
+    return withSecurityHeaders(await routeRequest({ deps, request }));
   } catch (error) {
     if (error instanceof HttpError) {
-      return errorResponse(error);
+      return withSecurityHeaders(errorResponse(error));
     }
     console.error("Unhandled request error", error instanceof Error ? error.name : "unknown");
-    return errorResponse(new HttpError(500, "internal", "Something went wrong"));
+    return withSecurityHeaders(errorResponse(new HttpError(500, "internal", "Something went wrong")));
   }
 }
 
