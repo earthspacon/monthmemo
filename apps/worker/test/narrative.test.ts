@@ -114,7 +114,7 @@ describe("Report narrative", () => {
     expect(groqRequests()).toHaveLength(2);
   });
 
-  it("MM-R15 a Groq 429 keeps the report pending like the cap does, alerts the owner once, and resumes later", async () => {
+  it("MM-R15 a Groq 429 keeps the report pending without a budget alert and resumes later", async () => {
     const { reportId } = await pendingReport();
     fake.groqReplies = [{ status: 429 }];
 
@@ -122,11 +122,11 @@ describe("Report narrative", () => {
 
     expect((await readReport(reportId)).status).toBe("pending");
     expect(groqRequests()).toHaveLength(1);
-    expect(ownerAlerts()).toHaveLength(1);
+    expect(ownerAlerts()).toHaveLength(0);
 
     await runJobs(JOB_TICKS);
     expect((await readReport(reportId)).status).toBe("draft");
-    expect(ownerAlerts()).toHaveLength(1);
+    expect(ownerAlerts()).toHaveLength(0);
   });
 
   it("MM-R16 over the global daily cap the report stays pending, the owner gets one alert, and it resumes after reset", async () => {

@@ -107,9 +107,9 @@ async function processReport({ deps, report }: { deps: Deps; report: PendingRepo
       now,
     });
   } catch (error) {
+    // A per-minute provider limit, not the daily cap: the report retries on the next tick and the owner is not mailed.
     if (error instanceof GroqRateLimited) {
       await releaseReport({ db: deps.db, id: report.id, now: deps.now().toISOString() });
-      await alertBudgetReached({ deps, day });
       return;
     }
     await failOrRetry({ deps, report, error, exhaustedReason });
@@ -240,15 +240,7 @@ async function sendAgencyNotices({ deps, agencyId, period }: { deps: Deps; agenc
   }
 }
 
-async function sendFailureNotice({
-  deps,
-  agencyId,
-  period,
-}: {
-  deps: Deps;
-  agencyId: string;
-  period: string;
-}) {
+async function sendFailureNotice({ deps, agencyId, period }: { deps: Deps; agencyId: string; period: string }) {
   if (!(await claimAgencyNotice({ db: deps.db, agencyId, period, kind: FAILED_NOTICE_KIND }))) {
     return;
   }
@@ -296,9 +288,11 @@ async function sendReadyNotice({
 }
 
 function countOf({ counts, status }: { counts: StatusCount[]; status: ReportStatus }) {
-  return counts.find((row) => {
-    return row.status === status;
-  })?.count ?? 0;
+  return (
+    counts.find((row) => {
+      return row.status === status;
+    })?.count ?? 0
+  );
 }
 
 function labelFor(reason: FailureReason | null) {
