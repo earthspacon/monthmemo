@@ -6,6 +6,13 @@ import { insertPendingReports, listClientsWithinLimit, listRunnableAgencies } fr
 export const MONTHLY_RUN_CRON = "0 6 4 * *";
 
 const FIRST_DAY_OF_MONTH = 1;
+const MONTHLY_RUN_DAY = 4;
+const MONTHLY_RUN_FIRST_HOUR = 6;
+
+// Repeats every hour for the rest of the 4th, so one missed tick does not skip a month; the inserts ignore duplicates.
+export function isMonthlyRunTick({ at }: { at: Date }) {
+  return at.getUTCMinutes() === 0 && at.getUTCDate() === MONTHLY_RUN_DAY && at.getUTCHours() >= MONTHLY_RUN_FIRST_HOUR;
+}
 
 // The run on the 4th reports on the previous calendar month in UTC (D6).
 export function periodOf({ date }: { date: Date }) {

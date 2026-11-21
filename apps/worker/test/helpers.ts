@@ -7,9 +7,10 @@ import { BASIC_SCOPE, fake, FULL_SCOPE, type GoogleProfile, TEST_ACCESS_TOKEN, T
 export const BASE = "http://localhost:8787";
 export const db = env.DB;
 
-export const MONTHLY_RUN_CRON = "0 6 4 * *";
-export const JOBS_CRON = "* * * * *";
-export const MAINTENANCE_CRON = "0 * * * *";
+// Production has this one trigger; the Worker picks the hourly and monthly jobs from the tick time.
+export const EVERY_MINUTE_CRON = "* * * * *";
+// A tick that is not at the top of an hour runs only the minute job.
+const PLAIN_TICK = new Date("2026-01-10T12:01:00Z");
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const UNSUBSCRIBE_TOKEN_BYTES = 16;
@@ -349,18 +350,27 @@ export async function countRows({ sql, params = [] }: { sql: string; params?: un
   return row?.count ?? 0;
 }
 
-// Fires one cron through the Worker's exported `scheduled` handler and waits for everything it scheduled.
-export async function runCron({ cron, scheduledTime = Date.now() }: { cron: string; scheduledTime?: number }) {
+// Fires the trigger through the Worker's exported `scheduled` handler and waits for everything it scheduled.
+export async function runTick({ at }: { at: Date }) {
   const worker = (await import("../src/index")).default;
   const ctx = createExecutionContext();
-  await worker.scheduled(createScheduledController({ cron, scheduledTime }), env, ctx);
+  await worker.scheduled(createScheduledController({ cron: EVERY_MINUTE_CRON, scheduledTime: at.getTime() }), env, ctx);
   await waitOnExecutionContext(ctx);
 }
 
 export async function runJobs(times = 1) {
   for (let tick = 0; tick < times; tick += 1) {
-    await runCron({ cron: JOBS_CRON });
+    await runTick({ at: PLAIN_TICK });
   }
+}
+
+// The first monthly run of the month `date` falls in: the 4th, 06:00 UTC.
+export function monthlyRunOf(date: Date) {
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 4, 6));
+}
+
+export function nextHourOf(date: Date) {
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), date.getUTCHours() + 1));
 }
 
 // Calls the Worker's fetch handler with a changed env (for env-dependent behaviour SELF cannot vary).

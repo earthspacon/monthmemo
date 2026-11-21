@@ -40,8 +40,11 @@ with the id of the behaviour they cover, so `-t` selects one behaviour.
 
 ## Crons
 
-| Schedule    | Job                                                                   |
-| ----------- | --------------------------------------------------------------------- |
-| `0 6 4 * *` | Monthly run: one pending report per active client for the past month. |
-| `* * * * *` | Report jobs: metrics and narrative for pending reports, then sending. |
-| `0 * * * *` | Maintenance: expire ended trials, clear old rate-limit rows.          |
+One trigger, `* * * * *`: the Cloudflare Free plan allows 5 cron triggers per account, and the studio's products share it.
+The Worker picks the job from the tick time (UTC):
+
+| Tick                            | Job                                                                                                                             |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Any minute except `:00`         | Report jobs: metrics and narrative for pending reports, then sending.                                                           |
+| `:00`                           | Maintenance: expire ended trials, clear old rate-limit rows.                                                                    |
+| `:00` on the 4th, from 06:00 on | Also the monthly run: one pending report per active client for the past month. Repeats hourly that day; duplicates are ignored. |

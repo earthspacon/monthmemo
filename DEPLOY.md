@@ -12,7 +12,7 @@ pnpm wrangler d1 migrations apply monthmemo --env production --remote
 ```
 
 Fill every `REPLACE_WITH_…` value in the `[env.production]` block of `apps/worker/wrangler.toml`. The block repeats the
-`AUTH_LIMITER` binding, the three crons, `DEV_ROUTES = "0"`, `GOOGLE_FAKE = "0"` and the LLM spend caps, because bindings
+`AUTH_LIMITER` binding, the cron trigger, `DEV_ROUTES = "0"`, `GOOGLE_FAKE = "0"` and the LLM spend caps, because bindings
 and vars are not inherited from the top level.
 
 ## 2. Secrets

@@ -18,8 +18,7 @@ import { requireActivePlan, type ApiContext } from "./context";
 
 const ISO_DAY_LENGTH = 10;
 const PERIOD_PATTERN = /^\d{4}-\d{2}$/;
-const PREVIEW_CSP =
-  "default-src 'none'; img-src https:; style-src 'unsafe-inline'; frame-ancestors 'self'";
+const PREVIEW_CSP = "default-src 'none'; img-src https:; style-src 'unsafe-inline'; frame-ancestors 'self'";
 
 function listItemOf(row: ReportListRow): ReportListItemDto {
   return {

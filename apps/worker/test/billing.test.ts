@@ -13,10 +13,10 @@ import {
   db,
   GA4_PROPERTY_ID,
   GSC_SITE_URL,
-  MAINTENANCE_CRON,
+  nextHourOf,
   postPaddleEvent,
   readReport,
-  runCron,
+  runTick,
   seedAgency,
   seedClient,
   seedReport,
@@ -25,7 +25,8 @@ import {
   uniqueEmail,
 } from "./helpers";
 
-const DAY_MS = 24 * 60 * 60 * 1000;
+const MINUTE_MS = 60 * 1000;
+const DAY_MS = 24 * 60 * MINUTE_MS;
 const STARTER_PRICE_ID = "pri_starter_example";
 const GROWTH_PRICE_ID = "pri_growth_example";
 const UNKNOWN_PRICE_ID = "pri_unknown_example";
@@ -197,10 +198,22 @@ describe("Billing", () => {
     const running = await seedAgency({ status: "trialing" });
     await setAgency({ agencyId: ended.agencyId, trialEndsAt: new Date(Date.now() - DAY_MS).toISOString() });
 
-    await runCron({ cron: MAINTENANCE_CRON });
+    await runTick({ at: nextHourOf(new Date()) });
 
     expect((await agencyState(ended.agencyId))?.status).toBe("expired");
     expect((await agencyState(running.agencyId))?.status).toBe("trialing");
+  });
+
+  it("MM-R25 the minute trigger runs maintenance only at the top of an hour", async () => {
+    const ended = await seedAgency({ status: "trialing" });
+    await setAgency({ agencyId: ended.agencyId, trialEndsAt: new Date(Date.now() - DAY_MS).toISOString() });
+    const topOfHour = nextHourOf(new Date());
+
+    await runTick({ at: new Date(topOfHour.getTime() + MINUTE_MS) });
+    expect((await agencyState(ended.agencyId))?.status).toBe("trialing");
+
+    await runTick({ at: topOfHour });
+    expect((await agencyState(ended.agencyId))?.status).toBe("expired");
   });
 
   it("MM-R25 an inactive plan blocks client create and approve with 402 while reads and billing still work", async () => {

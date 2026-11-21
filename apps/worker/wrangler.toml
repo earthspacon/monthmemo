@@ -23,9 +23,10 @@ database_name = "monthmemo"
 database_id = "00000000-0000-0000-0000-000000000000"
 migrations_dir = "migrations"
 
-# 4th of the month 06:00 UTC: monthly run (Search Console lags 2-3 days). Every minute: report jobs. Hourly: maintenance.
+# One trigger for every job (the Free plan has 5 per account); src/index.ts picks the job from the tick time.
+# The monthly run starts on the 4th at 06:00 UTC because Search Console lags 2-3 days.
 [triggers]
-crons = ["0 6 4 * *", "* * * * *", "0 * * * *"]
+crons = ["* * * * *"]
 
 # Secrets, set with `wrangler secret put <NAME> --env production` (locally in .dev.vars):
 #   BETTER_AUTH_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GROQ_API_KEY, RESEND_API_KEY,
@@ -68,7 +69,7 @@ database_id = "REPLACE_WITH_D1_DATABASE_ID"
 migrations_dir = "migrations"
 
 [env.production.triggers]
-crons = ["0 6 4 * *", "* * * * *", "0 * * * *"]
+crons = ["* * * * *"]
 
 [env.production.vars]
 APP_URL = "https://monthmemo.spacesonlabs.com"

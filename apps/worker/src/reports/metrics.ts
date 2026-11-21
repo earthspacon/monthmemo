@@ -152,7 +152,15 @@ function toTopRows(rows: GscRow[] | undefined): TopRow[] {
   });
 }
 
-async function readGscTotals({ google, siteUrl, bounds }: { google: GoogleClient; siteUrl: string; bounds: MonthBounds }) {
+async function readGscTotals({
+  google,
+  siteUrl,
+  bounds,
+}: {
+  google: GoogleClient;
+  siteUrl: string;
+  bounds: MonthBounds;
+}) {
   const answer = await google.querySearchAnalytics({
     siteUrl,
     request: { ...bounds, dataState: "final" },

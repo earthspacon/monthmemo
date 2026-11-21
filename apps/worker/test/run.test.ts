@@ -9,10 +9,10 @@ import {
   db,
   expireAccessToken,
   GA4_PROPERTY_ID,
-  MONTHLY_RUN_CRON,
+  monthlyRunOf,
   readReport,
-  runCron,
   runJobs,
+  runTick,
   SECOND_GA4_PROPERTY_ID,
   seedAgency,
   seedClient,
@@ -20,6 +20,8 @@ import {
 } from "./helpers";
 
 const MINUTE_MS = 60_000;
+const HOUR_MS = 60 * MINUTE_MS;
+const DAY_MS = 24 * HOUR_MS;
 const JOB_TICKS = 3;
 
 async function reportsOf(clientIds: string[]) {
@@ -48,19 +50,39 @@ describe("Monthly run", () => {
       (await seedClient({ agencyId: trialing.agencyId, name: "Northside Dental" })).clientId,
       (await seedClient({ agencyId: active.agencyId, name: "Harbor Yoga" })).clientId,
     ];
-    const scheduledTime = Date.now();
+    const at = monthlyRunOf(new Date());
 
-    await runCron({ cron: MONTHLY_RUN_CRON, scheduledTime });
+    await runTick({ at });
     const first = await reportsOf(clientIds);
 
     expect(first).toHaveLength(clientIds.length);
     expect(new Set(first.map((row) => row.client_id))).toEqual(new Set(clientIds));
     for (const row of first) {
-      expect(row).toMatchObject({ status: "pending", period: previousPeriodOf(new Date(scheduledTime)) });
+      expect(row).toMatchObject({ status: "pending", period: previousPeriodOf(at) });
     }
 
-    await runCron({ cron: MONTHLY_RUN_CRON, scheduledTime: scheduledTime + MINUTE_MS });
+    await runTick({ at: new Date(at.getTime() + HOUR_MS) });
     expect(await reportsOf(clientIds)).toHaveLength(clientIds.length);
+  });
+
+  it("MM-R13 the minute trigger starts the monthly run only at the top of an hour on the 4th from 06:00 UTC", async () => {
+    const { agencyId } = await seedAgency({ status: "active", plan: "growth" });
+    const { clientId } = await seedClient({ agencyId });
+    const runAt = monthlyRunOf(new Date());
+    const tooEarly = [
+      new Date(runAt.getTime() - HOUR_MS),
+      new Date(runAt.getTime() - DAY_MS),
+      new Date(runAt.getTime() + MINUTE_MS),
+    ];
+
+    for (const at of tooEarly) {
+      await runTick({ at });
+    }
+    expect(await reportsOf([clientId])).toEqual([]);
+
+    // A missed 06:00 tick is made up later the same day.
+    await runTick({ at: new Date(runAt.getTime() + 17 * HOUR_MS) });
+    expect(await reportsOf([clientId])).toHaveLength(1);
   });
 
   it("MM-R14 the run skips inactive agencies and clients past the plan limit by creation order", async () => {
@@ -81,7 +103,7 @@ describe("Monthly run", () => {
       overLimit.push(clientId);
     }
 
-    await runCron({ cron: MONTHLY_RUN_CRON });
+    await runTick({ at: monthlyRunOf(new Date()) });
 
     expect(await reportsOf(inactiveClients)).toEqual([]);
     const built = await reportsOf(overLimit);
