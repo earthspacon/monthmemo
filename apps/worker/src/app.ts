@@ -47,7 +47,7 @@ const APP_CSP = [
   "img-src 'self' data: https:",
   "font-src 'self' data:",
   "connect-src 'self' https://challenges.cloudflare.com https://*.paddle.com",
-  "frame-src https://challenges.cloudflare.com https://*.paddle.com",
+  "frame-src 'self' https://challenges.cloudflare.com https://*.paddle.com",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",
