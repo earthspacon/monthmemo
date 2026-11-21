@@ -375,7 +375,9 @@ export async function fetchWithEnv({
 }) {
   const worker = (await import("../src/index")).default;
   const ctx = createExecutionContext();
-  const response = await worker.fetch(new Request(`${BASE}${path}`, init), { ...env, ...overrides }, ctx);
+  // The handler is typed for incoming requests (with `cf`); a test-built one never carries it.
+  const request = new Request(`${BASE}${path}`, init) as Request<unknown, IncomingRequestCfProperties>;
+  const response = await worker.fetch(request, { ...env, ...overrides }, ctx);
   await waitOnExecutionContext(ctx);
   return response;
 }
