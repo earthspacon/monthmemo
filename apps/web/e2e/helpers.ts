@@ -43,53 +43,17 @@ const SENT_DAY_FORMAT = new Intl.DateTimeFormat("en-US", {
 });
 
 export type Viewport = typeof DESKTOP;
-export type Plan = "starter" | "growth";
-export type AgencyStatus = "trialing" | "active" | "past_due" | "canceled" | "expired";
-export type ReportStatus = "pending" | "building" | "draft" | "failed" | "sending" | "sent" | "send_failed" | "skipped";
-export type FailureReason = "narrative_failed" | "google_reconnect_needed" | "source_not_found" | "google_error";
-
-export type Sources = {
-  ga4: Array<{ propertyId: string; name: string; account: string }>;
-  gsc: Array<{ siteUrl: string }>;
-};
-
-export type ClientRow = {
-  id: string;
-  name: string;
-  ga4PropertyId: string | null;
-  ga4PropertyName: string | null;
-  gscSiteUrl: string | null;
-  recipients: Array<{ email: string; unsubscribed: boolean }>;
-  nextReportOn: string;
-};
-
-export type ReportRow = {
-  id: string;
-  clientId: string;
-  clientName: string;
-  period: string;
-  status: ReportStatus;
-  failureReason: FailureReason | null;
-  sentAt: string | null;
-  recipientCount: number;
-};
-
-export type Billing = {
-  plan: Plan;
-  status: AgencyStatus;
-  trialEndsAt: string | null;
-  clientLimit: number;
-  plans: Array<{ plan: Plan; priceCents: number; clientLimit: number; paddlePriceId: string }>;
-  paddleClientToken: string;
-  paddleEnv: string;
-};
-
-export type Brand = {
-  displayName: string;
-  accentColor: string;
-  logoUrl: string | null;
-  replyTo: string;
-};
+export type {
+  AgencyStatus,
+  BillingDto as Billing,
+  BrandDto as Brand,
+  ClientDto as ClientRow,
+  FailureReason,
+  GoogleSourcesDto as Sources,
+  Plan,
+  ReportListItemDto as ReportRow,
+  ReportStatus,
+} from "@monthmemo/contract";
 
 type ApiTarget = {
   page: Page;

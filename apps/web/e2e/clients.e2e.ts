@@ -1,3 +1,4 @@
+import { PLANS } from "@monthmemo/contract";
 import { afterAll, afterEach, expect, it } from "vitest";
 
 import {
@@ -22,7 +23,7 @@ import {
   unsubscribe,
 } from "./helpers";
 
-const STARTER_CLIENT_LIMIT = 5;
+const STARTER_CLIENT_LIMIT = PLANS.starter.clientLimit;
 const ADD_CLIENT = "Add client";
 const GA4_PICKER = "Google Analytics property";
 const GSC_PICKER = "Search Console site";
