@@ -3,24 +3,30 @@ import { createGate } from "effector-react";
 
 import { apiRequest } from "../shared/api";
 
-const AFTER_SIGN_IN = {
-  callbackURL: "/app/reports",
-  errorCallbackURL: "/sign-in",
-};
+const DEFAULT_NEXT = "/app/reports";
+const ERROR_CALLBACK_URL = "/sign-in";
 const TURNSTILE_HEADER = "x-turnstile-token";
+
+// Only in-app paths are followed after sign-in, so `?next=` cannot send the visitor elsewhere.
+export function readNext(raw: string | null) {
+  if (raw && raw.startsWith("/app") && !raw.startsWith("//")) {
+    return raw;
+  }
+  return DEFAULT_NEXT;
+}
 
 export const SignInGate = createGate();
 export const turnstileSolved = createEvent<string>();
 export const turnstileExpired = createEvent();
-export const googleClicked = createEvent();
+export const googleClicked = createEvent<string>();
 
 // Better Auth answers with Google's consent URL; the browser leaves for Google and comes back via the callback.
-export const googleSignInFx = createEffect(async (token: string) => {
+export const googleSignInFx = createEffect(async ({ token, next }: { token: string; next: string }) => {
   const { url } = await apiRequest<{ url: string }>({
     path: "/api/auth/sign-in/social",
     method: "POST",
     headers: { [TURNSTILE_HEADER]: token },
-    body: { provider: "google", ...AFTER_SIGN_IN },
+    body: { provider: "google", callbackURL: next, errorCallbackURL: ERROR_CALLBACK_URL },
   });
   window.location.assign(url);
 });
@@ -52,6 +58,7 @@ sample({
   clock: googleClicked,
   source: $turnstileToken,
   filter: (token) => token !== "",
+  fn: (token, next) => ({ token, next }),
   target: googleSignInFx,
 });
 

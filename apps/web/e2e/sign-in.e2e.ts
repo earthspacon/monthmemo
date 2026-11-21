@@ -82,3 +82,20 @@ it("MM-R35.f sign-in fits a 390 px phone with the button in view", async () => {
   expect((box?.y ?? 0) + (box?.height ?? 0)).toBeLessThanOrEqual(MOBILE.height);
   await expectNoHorizontalScroll(page);
 });
+
+it("MM-R35.e the Google sign-in carries ?next= as the callback", async () => {
+  const { page } = await openPage();
+  await stubTurnstile({ page });
+  const bodies: unknown[] = [];
+  await page.route("**/api/auth/sign-in/social", async (route) => {
+    bodies.push(route.request().postDataJSON());
+    await route.abort();
+  });
+  await page.goto("/sign-in?next=/app/clients");
+  await page.getByRole("button", { name: VERIFY_BUTTON }).click();
+
+  await page.getByRole("button", { name: GOOGLE_BUTTON }).click();
+
+  await expect.poll(() => bodies.length).toBe(1);
+  expect(bodies[0]).toMatchObject({ provider: "google", callbackURL: "/app/clients" });
+});

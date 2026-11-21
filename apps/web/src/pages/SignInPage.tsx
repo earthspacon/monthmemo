@@ -11,6 +11,7 @@ import {
   $turnstileRound,
   $turnstileToken,
   googleClicked,
+  readNext,
   googleSignInFx,
   SignInGate,
   turnstileExpired,
@@ -20,14 +21,6 @@ import {
 const CANCELLED_MESSAGE = "Google sign-in was cancelled. Try again.";
 const FAILED_MESSAGE = "Google sign-in didn't finish. Try again.";
 const CANCELLED_ERRORS = new Set(["access_denied"]);
-const DEFAULT_NEXT = "/app/reports";
-
-function readNext(raw: string | null) {
-  if (raw && raw.startsWith("/app") && !raw.startsWith("//")) {
-    return raw;
-  }
-  return DEFAULT_NEXT;
-}
 
 function describeError(code: string | null) {
   if (!code) {
@@ -104,7 +97,7 @@ export const SignInPage = () => {
           type="button"
           className={`${BUTTON_PRIMARY} w-full`}
           disabled={token === "" || isRedirecting}
-          onClick={() => googleClicked()}
+          onClick={() => googleClicked(readNext(params.get("next")))}
         >
           {isRedirecting ? <Loader2 className="size-4 animate-spin" /> : null}
           {isRedirecting ? "Redirecting…" : "Continue with Google"}
