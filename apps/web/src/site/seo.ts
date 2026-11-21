@@ -2,7 +2,7 @@ import { PLANS } from "@monthmemo/contract";
 
 import { FAQ, formatDollars, GROWTH_PRICE, PRODUCT_NAME, STARTER_PRICE } from "./config";
 
-export const SITE_URL = "https://monthmemo.com";
+export const SITE_URL = "https://monthmemo.spacesonlabs.com";
 export const OG_IMAGE_PATH = "/og.png";
 
 export type SeoPage = {

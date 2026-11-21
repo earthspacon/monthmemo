@@ -2,4 +2,4 @@ User-agent: *
 Disallow: /app/
 Disallow: /api/
 
-Sitemap: https://monthmemo.com/sitemap.xml
+Sitemap: https://monthmemo.spacesonlabs.com/sitemap.xml

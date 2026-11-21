@@ -2,7 +2,7 @@ import { PLANS, TRIAL_DAYS } from "@monthmemo/contract";
 
 // The owner fills these two before the Paddle domain review. Every public page reads them from this file only.
 export const SELLER_LEGAL_NAME = "SELLER_LEGAL_NAME";
-export const CONTACT_EMAIL = "CONTACT_EMAIL";
+export const CONTACT_EMAIL = "monthmemo@spacesonlabs.com";
 
 export const SELLER_BRAND = "Spaceson Labs";
 export const SELLER_IDENTITY = `${SELLER_BRAND} (${SELLER_LEGAL_NAME})`;
@@ -48,7 +48,10 @@ export const FOOTER_LINKS = [
 export const SUB_PROCESSORS = [
   { name: "Cloudflare, Inc.", purpose: "Hosting, database and scheduled jobs" },
   { name: "Google LLC", purpose: "Sign-in and read-only access to Google Analytics and Search Console" },
-  { name: "Anthropic, PBC", purpose: "Writes the narrative from aggregate metrics (no training on your data)" },
+  {
+    name: "Groq, Inc.",
+    purpose: "Writes the narrative from aggregate metrics (no training; inputs not retained by default)",
+  },
   { name: "Resend", purpose: "Sends sign-in, approval and client report emails" },
   { name: "Paddle.com", purpose: "Merchant of record: checkout, invoices, tax and refunds" },
 ];

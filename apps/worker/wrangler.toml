@@ -28,7 +28,7 @@ migrations_dir = "migrations"
 crons = ["0 6 4 * *", "* * * * *", "0 * * * *"]
 
 # Secrets, set with `wrangler secret put <NAME> --env production` (locally in .dev.vars):
-#   BETTER_AUTH_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, ANTHROPIC_API_KEY, RESEND_API_KEY,
+#   BETTER_AUTH_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GROQ_API_KEY, RESEND_API_KEY,
 #   PADDLE_API_KEY, PADDLE_WEBHOOK_SECRET, TURNSTILE_SECRET_KEY
 # Local defaults below; `--env production` uses the block at the end.
 [vars]
@@ -48,7 +48,7 @@ TURNSTILE_SITE_KEY = "1x00000000000000000000AA"
 # Production: `wrangler deploy --env production`. Bindings aren't inherited, so they are repeated here.
 [env.production]
 name = "monthmemo"
-routes = [{ pattern = "monthmemo.com", custom_domain = true }]
+routes = [{ pattern = "monthmemo.spacesonlabs.com", custom_domain = true }]
 
 [env.production.assets]
 directory = "../web/dist"
@@ -71,8 +71,8 @@ migrations_dir = "migrations"
 crons = ["0 6 4 * *", "* * * * *", "0 * * * *"]
 
 [env.production.vars]
-APP_URL = "https://monthmemo.com"
-MAIL_FROM = "MonthMemo <reports@mail.monthmemo.com>"
+APP_URL = "https://monthmemo.spacesonlabs.com"
+MAIL_FROM = "MonthMemo <monthmemo@mail.spacesonlabs.com>"
 DEV_ROUTES = "0"
 GOOGLE_FAKE = "0"
 PADDLE_ENV = "production"
