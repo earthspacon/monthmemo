@@ -70,8 +70,8 @@ Create a Turnstile widget for `monthmemo.com`. The site key goes into `TURNSTILE
 ## 7. Model provider spend
 
 Required: set a monthly spend limit on the model provider's organisation before the key is used in production. The worker also
-caps spend (`LLM_DAILY_USD_CAP`, `LLM_AGENCY_DAILY_USD_CAP`) and falls back to a template text, but the provider-side
-limit is the backstop.
+caps spend (`LLM_DAILY_USD_CAP`, `LLM_AGENCY_DAILY_USD_CAP`), but the provider-side limit is the backstop. Without the key in
+production every narrative fails: the template writer is dev-only (`DEV_ROUTES=1`).
 
 ## 8. Build and deploy
 
