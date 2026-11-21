@@ -1,15 +1,37 @@
-import { PLANS, type AgencyStatus, type Plan } from "@monthmemo/contract";
+import { PLANS, type AgencyStatus, type FailureReason, type Plan, type ReportStatus } from "@monthmemo/contract";
 
 import { createAuth } from "../auth";
 import { GA4_SCOPE, GSC_SCOPE } from "../google/client";
 import { HttpError, json, readJson, readString, route, type Route } from "../http";
 import { newId } from "../ids";
-import { createAgency, setGoogleNeedsReconnect } from "../repo/agencies";
+import { createAgency, getAgencyByUserId, setGoogleNeedsReconnect } from "../repo/agencies";
+import { seedReport } from "../repo/reports";
+import { JOBS_CRON, processPendingReports } from "../reports/jobs";
+import { MONTHLY_RUN_CRON, runMonthlyReports } from "../reports/run";
 import type { PublicContext } from "./context";
 
 const EMAIL_MAX_LENGTH = 254;
 const OUTBOX_LIMIT = 20;
+const ID_MAX_LENGTH = 64;
+const CRON_MAX_LENGTH = 40;
+const PERIOD_PATTERN = /^\d{4}-\d{2}$/;
 const STATUSES: AgencyStatus[] = ["trialing", "active", "past_due", "canceled", "expired"];
+const REPORT_STATUSES: ReportStatus[] = [
+  "pending",
+  "building",
+  "draft",
+  "failed",
+  "sending",
+  "sent",
+  "send_failed",
+  "skipped",
+];
+const FAILURE_REASONS: FailureReason[] = [
+  "narrative_failed",
+  "google_reconnect_needed",
+  "source_not_found",
+  "google_error",
+];
 const COOKIE_SIGNATURE_BYTES_HASH = { name: "HMAC", hash: "SHA-256" };
 const BASIC_SCOPES = ["openid", "email", "profile"];
 // The fake Google client never sends it anywhere; it only marks the identity as able to refresh.
@@ -21,6 +43,14 @@ function isPlan(value: unknown): value is Plan {
 
 function isStatus(value: unknown): value is AgencyStatus {
   return typeof value === "string" && STATUSES.some((status) => status === value);
+}
+
+function isReportStatus(value: unknown): value is ReportStatus {
+  return typeof value === "string" && REPORT_STATUSES.some((status) => status === value);
+}
+
+function isFailureReason(value: unknown): value is FailureReason {
+  return typeof value === "string" && FAILURE_REASONS.some((reason) => reason === value);
 }
 
 async function signCookieValue({ value, secret }: { value: string; secret: string }) {
@@ -147,6 +177,68 @@ export const devRoutes: Route<PublicContext>[] = [
     await upsertGoogleIdentity({ db: deps.db, userId: session.user.id, scope: scopes.join(" "), now });
     await setGoogleNeedsReconnect({ db: deps.db, userId: session.user.id, needsReconnect, now });
     return json({ ga4, gsc, needsReconnect });
+  }),
+
+  // Dev-only: seeds one report for the signed-in agency, the state every reports test starts from.
+  route("POST", "/dev/reports", async ({ deps, request }) => {
+    const session = await createAuth(deps.env).api.getSession({ headers: request.headers });
+
+    if (!session) {
+      throw new HttpError(401, "unauthorized", "Sign in first");
+    }
+    const agency = await getAgencyByUserId({ db: deps.db, userId: session.user.id });
+
+    if (!agency) {
+      throw new HttpError(403, "no_agency", "This user has no agency");
+    }
+    const data = await readJson(request);
+    const clientId = readString({ data, key: "clientId", maxLength: ID_MAX_LENGTH });
+    const period = readString({ data, key: "period", maxLength: 7 });
+    const status = data.status;
+
+    if (!isReportStatus(status)) {
+      throw new HttpError(400, "invalid_field", `"status" must be a report status`);
+    }
+    if (data.failureReason !== undefined && data.failureReason !== null && !isFailureReason(data.failureReason)) {
+      throw new HttpError(400, "invalid_field", `"failureReason" must be a failure reason`);
+    }
+    if (!PERIOD_PATTERN.test(period)) {
+      throw new HttpError(400, "invalid_field", `"period" must be YYYY-MM`);
+    }
+    const client = await deps.db
+      .prepare("SELECT agency_id AS agencyId FROM clients WHERE id = ?")
+      .bind(clientId)
+      .first<{ agencyId: string }>();
+
+    if (!client || client.agencyId !== agency.id) {
+      throw new HttpError(404, "not_found", "Not found");
+    }
+    const id = await seedReport({
+      db: deps.db,
+      agencyId: agency.id,
+      clientId,
+      period,
+      status,
+      failureReason: isFailureReason(data.failureReason) ? data.failureReason : null,
+      now: deps.now().toISOString(),
+    });
+    return json({ id });
+  }),
+
+  // Dev-only: fires one scheduled cron now, so a browser test does not wait for the minute or the 4th.
+  route("POST", "/dev/run", async ({ deps, request }) => {
+    const data = await readJson(request);
+    const cron = readString({ data, key: "cron", maxLength: CRON_MAX_LENGTH });
+
+    if (cron === MONTHLY_RUN_CRON) {
+      const result = await runMonthlyReports({ deps, scheduledTime: deps.now().getTime() });
+      return json({ cron, period: result.period });
+    }
+    if (cron === JOBS_CRON) {
+      await processPendingReports({ deps });
+      return json({ cron });
+    }
+    throw new HttpError(400, "invalid_field", `"cron" must be a scheduled cron`);
   }),
 
   route("GET", "/dev/outbox", async ({ deps, request }) => {

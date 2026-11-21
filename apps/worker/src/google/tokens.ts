@@ -101,3 +101,29 @@ export async function createGoogleClientFor({ deps, userId }: { deps: Deps; user
   }
   return createGoogleClient({ accessToken: await getGoogleAccessToken({ deps, userId }) });
 }
+
+// A Google API can reject a still-unexpired access token (revoked early or clock skew); one forced refresh recovers,
+// and a refresh token Google refuses maps to the reconnect path instead.
+export async function refreshGoogleAccessTokenFor({ deps, userId }: { deps: Deps; userId: string }) {
+  const identity = await findGoogleIdentity({ db: deps.db, userId });
+
+  if (!identity) {
+    throw new GoogleNotConnected();
+  }
+  let refreshRejected = false;
+  const auth = createAuth(deps.env, {
+    onRefreshRejected: () => {
+      refreshRejected = true;
+    },
+  });
+
+  try {
+    await auth.api.refreshToken({ body: { accountId: identity.id, userId } });
+  } catch (error) {
+    if (!refreshRejected) {
+      throw error;
+    }
+    await setGoogleNeedsReconnect({ db: deps.db, userId, needsReconnect: true, now: deps.now() });
+    throw new GoogleReconnectNeeded();
+  }
+}
