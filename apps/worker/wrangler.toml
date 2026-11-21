@@ -59,13 +59,13 @@ run_worker_first = ["/api/*", "/dev/*", "/paddle/*", "/u/*", "/app", "/app/*", "
 
 [[env.production.ratelimits]]
 name = "AUTH_LIMITER"
-namespace_id = "1001"
+namespace_id = "1005"
 simple = { limit = 30, period = 60 }
 
 [[env.production.d1_databases]]
 binding = "DB"
 database_name = "monthmemo"
-database_id = "REPLACE_WITH_D1_DATABASE_ID"
+database_id = "7f4b7ac7-7ff8-4c0c-9ea6-cbbc8dd4f92c"
 migrations_dir = "migrations"
 
 [env.production.triggers]
@@ -82,5 +82,5 @@ PADDLE_PRICE_STARTER = "REPLACE_WITH_PRICE_ID"
 PADDLE_PRICE_GROWTH = "REPLACE_WITH_PRICE_ID"
 LLM_DAILY_USD_CAP = "5"
 LLM_AGENCY_DAILY_USD_CAP = "0.10"
-OWNER_ALERT_EMAIL = "REPLACE_WITH_OWNER_EMAIL"
-TURNSTILE_SITE_KEY = "REPLACE_WITH_TURNSTILE_SITE_KEY"
+OWNER_ALERT_EMAIL = "alerts@spacesonlabs.com"
+TURNSTILE_SITE_KEY = "0x4AAAAAAGMNQbNPf4Fg2x5x"
