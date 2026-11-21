@@ -84,6 +84,11 @@ sample({
 });
 
 sample({
+  clock: ReportGate.close,
+  target: report.reset,
+});
+
+sample({
   clock: reportReloadRequested,
   fn: (id) => {
     return { id };

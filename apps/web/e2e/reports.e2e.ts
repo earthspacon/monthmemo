@@ -97,6 +97,26 @@ it("MM-R39.e a draft opens as the rendered email in a sandboxed frame with Appro
   await page.getByRole("button", { name: "Skip" }).waitFor();
 });
 
+it("MM-R39.e2 opening a second draft does not show the first client while it loads", async () => {
+  const { context, page } = await openPage();
+  await seedConnectedAgency({ context });
+  const first = await createClient({ context, name: "First Bakery" });
+  const second = await createClient({ context, name: "Second Florist" });
+  const firstReport = await seedReport({ context, clientId: first.id, status: "draft" });
+  const secondReport = await seedReport({ context, clientId: second.id, status: "draft" });
+  await page.goto(`/app/reports/${firstReport.id}`);
+  await page.getByRole("button", { name: "Approve" }).waitFor();
+
+  await page.getByRole("link", { name: "Reports" }).first().click();
+  const delayed = await delayApi({ page, path: `/api/reports/${secondReport.id}` });
+  await page.getByRole("link", { name: /Second Florist/ }).click();
+
+  await page.getByText("First Bakery").waitFor({ state: "detached" });
+  expect(await page.getByRole("button", { name: "Approve", disabled: false }).count()).toBe(0);
+  delayed.release();
+  await page.getByRole("button", { name: "Approve", disabled: false }).waitFor();
+});
+
 it("MM-R39.f a pending report shows Writing the summary… and no actions", async () => {
   const { context, page } = await openPage();
   await seedConnectedAgency({ context });
