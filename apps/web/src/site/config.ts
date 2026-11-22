@@ -21,10 +21,12 @@ export function formatDollars(cents: number) {
 export const STARTER_PRICE = formatDollars(PLANS.starter.priceCents);
 export const GROWTH_PRICE = formatDollars(PLANS.growth.priceCents);
 
-// Price per client at a full plan: Growth is the cheap end, Starter the dear end, rounded up to whole dollars.
-const PER_CLIENT_LOW = Math.ceil(PLANS.growth.priceCents / CENTS_PER_DOLLAR / PLANS.growth.clientLimit);
-const PER_CLIENT_HIGH = Math.ceil(PLANS.starter.priceCents / CENTS_PER_DOLLAR / PLANS.starter.clientLimit);
-export const PER_CLIENT_RANGE = `$${PER_CLIENT_LOW}-${PER_CLIENT_HIGH}`;
+// Price per client at a full plan, rounded up to a whole cent: Growth is the low end, Starter the high end.
+function perClientDollars({ priceCents, clientLimit }: { priceCents: number; clientLimit: number }) {
+  return (Math.ceil(priceCents / clientLimit) / CENTS_PER_DOLLAR).toFixed(2);
+}
+
+export const PER_CLIENT_RANGE = `$${perClientDollars(PLANS.growth)}-${perClientDollars(PLANS.starter)}`;
 
 // A07: AgencyAnalytics lists $20 per client billed yearly and $25 billed monthly.
 export const COMPETITOR_PER_CLIENT_RANGE = "$20-25";

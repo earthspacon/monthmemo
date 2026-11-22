@@ -159,7 +159,7 @@ it("MM-R37.j at the plan limit Add client is disabled with an upgrade link", asy
   await page.goto("/app/clients");
 
   await page.getByRole("button", { name: ADD_CLIENT, disabled: true }).waitFor();
-  const upgrade = page.getByRole("link", { name: "Upgrade to Growth for 15 clients" });
+  const upgrade = page.getByRole("link", { name: "Upgrade to Growth for 30 clients" });
   expect(await upgrade.getAttribute("href")).toBe("/app/billing");
 });
 

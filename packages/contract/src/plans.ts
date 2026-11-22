@@ -9,13 +9,13 @@ export type PlanConfig = {
 export const PLANS: Record<Plan, PlanConfig> = {
   starter: {
     label: "Starter",
-    priceCents: 2900,
-    clientLimit: 5,
+    priceCents: 900,
+    clientLimit: 10,
   },
   growth: {
     label: "Growth",
-    priceCents: 5900,
-    clientLimit: 15,
+    priceCents: 1900,
+    clientLimit: 30,
   },
 };
 
