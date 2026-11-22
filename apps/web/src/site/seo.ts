@@ -37,6 +37,12 @@ export const SEO_PAGES: SeoPage[] = [
       "Stop copying numbers into slides. How to turn GA4 and Search Console data into a monthly client report in three steps.",
   },
   {
+    path: "/tools/ga4-report-summary",
+    title: "Free GA4 report summary for clients | MonthMemo",
+    description:
+      "Type last month's sessions, search clicks, key events and top page. Get a short, plain paragraph for your client email. Free, no sign-up.",
+  },
+  {
     path: "/terms",
     title: "Terms of service | MonthMemo",
     description: "The terms for using MonthMemo, monthly client reports for small agencies.",
@@ -120,6 +126,7 @@ export function buildLlmsTxt() {
     `- ${SITE_URL}/pricing`,
     `- ${SITE_URL}/agencyanalytics-alternative`,
     `- ${SITE_URL}/automate-ga4-search-console-reports`,
+    `- ${SITE_URL}/tools/ga4-report-summary`,
     `- ${SITE_URL}/privacy`,
     "",
   ];

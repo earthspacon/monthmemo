@@ -42,6 +42,7 @@ export const FOOTER_LINKS = [
   { to: "/dpa", label: "DPA" },
   { to: "/agencyanalytics-alternative", label: "AgencyAnalytics alternative" },
   { to: "/automate-ga4-search-console-reports", label: "Automate GA4 reports" },
+  { to: "/tools/ga4-report-summary", label: "Free GA4 report summary" },
 ];
 
 export const SUB_PROCESSORS = [

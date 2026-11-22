@@ -6,6 +6,7 @@ import type { ApiContext, PublicContext } from "./api/context";
 import { CONNECT_PAGE_PATH, googleRoutes } from "./api/google";
 import { meRoutes } from "./api/me";
 import { reportRoutes } from "./api/reports";
+import { toolRoutes } from "./api/tools";
 import { unsubscribeRoutes } from "./api/unsubscribe";
 import { createAuth } from "./auth";
 import { handlePaddleWebhook } from "./billing/webhook";
@@ -35,6 +36,8 @@ const READ_METHODS = new Set(["GET", "HEAD"]);
 const UNSUBSCRIBE_PREFIX = "/u/";
 const PADDLE_WEBHOOK_PATH = "/paddle/webhook";
 const AUTH_PREFIX = "/api/auth/";
+// Free tools work without a session; they carry their own bot check and per-IP limit.
+const TOOLS_PREFIX = "/api/tools/";
 const GOOGLE_CALLBACK_PATH = "/api/auth/callback/google";
 // SPA routes get the app's index.html; every other unknown path is a 404.
 const APP_SHELL_PATH = /^\/(app|app\/.*|sign-in)$/;
@@ -94,7 +97,10 @@ async function routeRequest({ deps, request }: { deps: Deps; request: Request })
     return response;
   }
   if (pathname.startsWith(UNSUBSCRIBE_PREFIX)) {
-    return routeUnsubscribeRequest({ deps, request });
+    return routePublicRequest({ deps, request, routes: unsubscribeRoutes });
+  }
+  if (pathname.startsWith(TOOLS_PREFIX)) {
+    return routePublicRequest({ deps, request, routes: toolRoutes });
   }
   if (pathname === PADDLE_WEBHOOK_PATH && request.method === "POST") {
     return handlePaddleWebhook({ deps, request });
@@ -141,8 +147,16 @@ async function clearReconnectAfterConnect({
   }
 }
 
-async function routeUnsubscribeRequest({ deps, request }: { deps: Deps; request: Request }) {
-  const match = matchRoute<PublicContext>({ routes: unsubscribeRoutes, request });
+async function routePublicRequest({
+  deps,
+  request,
+  routes,
+}: {
+  deps: Deps;
+  request: Request;
+  routes: Route<PublicContext>[];
+}) {
+  const match = matchRoute<PublicContext>({ routes, request });
 
   if (!match) {
     throw new HttpError(404, "not_found", "Not found");

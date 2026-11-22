@@ -1,10 +1,10 @@
 import { useGate, useUnit } from "effector-react";
 import { Loader2 } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { Navigate, useSearchParams } from "react-router-dom";
 
 import { $me, $sessionStatus, appStarted } from "../session/model";
-import { loadTurnstile, TURNSTILE_SITE_KEY } from "../session/turnstile";
+import { TurnstileWidget } from "../session/TurnstileWidget";
 import { BUTTON_PRIMARY, Banner, Card } from "../shared/ui";
 import {
   $signInError,
@@ -29,46 +29,12 @@ function describeError(code: string | null) {
   return CANCELLED_ERRORS.has(code) ? CANCELLED_MESSAGE : FAILED_MESSAGE;
 }
 
-const TurnstileWidget = () => {
-  const { round } = useUnit({ round: $turnstileRound });
-  const container = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    let widgetId: string | null = null;
-    let isCancelled = false;
-
-    loadTurnstile()
-      .then((turnstile) => {
-        if (isCancelled || !container.current) {
-          return;
-        }
-        widgetId = turnstile.render(container.current, {
-          sitekey: TURNSTILE_SITE_KEY,
-          size: "flexible",
-          callback: turnstileSolved,
-          "expired-callback": turnstileExpired,
-          "error-callback": turnstileExpired,
-        });
-      })
-      .catch(() => {
-        turnstileExpired();
-      });
-    return () => {
-      isCancelled = true;
-      if (widgetId) {
-        window.turnstile?.remove(widgetId);
-      }
-    };
-  }, [round]);
-
-  return <div ref={container} className="min-h-16" />;
-};
-
 export const SignInPage = () => {
   useGate(SignInGate);
   const [params] = useSearchParams();
-  const { me, status, token, error, isRedirecting } = useUnit({
+  const { me, status, token, round, error, isRedirecting } = useUnit({
     me: $me,
+    round: $turnstileRound,
     status: $sessionStatus,
     token: $turnstileToken,
     error: $signInError,
@@ -92,7 +58,7 @@ export const SignInPage = () => {
           Use your Google account. We only read your name and email here; Google Analytics access is a separate step.
         </p>
         {message ? <Banner tone="danger">{message}</Banner> : null}
-        <TurnstileWidget />
+        <TurnstileWidget round={round} onSolved={turnstileSolved} onExpired={turnstileExpired} />
         <button
           type="button"
           className={`${BUTTON_PRIMARY} w-full`}

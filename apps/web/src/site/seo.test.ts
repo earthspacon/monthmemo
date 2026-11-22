@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { CONTACT_EMAIL, SELLER_LEGAL_NAME, SUB_PROCESSORS } from "./config";
+import { CONTACT_EMAIL, FOOTER_LINKS, SELLER_LEGAL_NAME, SUB_PROCESSORS } from "./config";
 import { LEGAL_DOCS } from "./legal";
-import { buildLlmsTxt, SITE_URL } from "./seo";
+import { buildLlmsTxt, SEO_PAGES, SITE_URL } from "./seo";
 
 const PRODUCTION_HOST = "https://monthmemo.spacesonlabs.com";
 
@@ -33,5 +33,18 @@ describe("Production site identity", () => {
   it("lists Groq as the narrative sub-processor", () => {
     const names = SUB_PROCESSORS.map((entry) => entry.name);
     expect(names).toContain("Groq, Inc.");
+  });
+});
+
+describe("Free report summary page", () => {
+  const TOOL_PATH = "/tools/ga4-report-summary";
+
+  it("is prerendered and listed in the sitemap", () => {
+    expect(SEO_PAGES.map((page) => page.path)).toContain(TOOL_PATH);
+  });
+
+  it("is linked from the footer and llms.txt", () => {
+    expect(FOOTER_LINKS.map((link) => link.to)).toContain(TOOL_PATH);
+    expect(buildLlmsTxt()).toContain(`${SITE_URL}${TOOL_PATH}`);
   });
 });

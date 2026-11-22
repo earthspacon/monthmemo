@@ -14,6 +14,7 @@ import { LandingPage } from "../site/LandingPage";
 import { LegalPage } from "../site/LegalPage";
 import { NotFoundPage } from "../site/NotFoundPage";
 import { PricingPage } from "../site/PricingPage";
+import { ReportSummaryToolPage } from "../tools/ReportSummaryToolPage";
 import { AppShell, RequireSession } from "./AppShell";
 import { ToastView } from "./ToastView";
 
@@ -38,6 +39,7 @@ export const AppRoutes = () => {
         <Route path="/pricing" element={<PricingPage />} />
         <Route path="/agencyanalytics-alternative" element={<AgencyAnalyticsAlternativePage />} />
         <Route path="/automate-ga4-search-console-reports" element={<AutomateReportsPage />} />
+        <Route path="/tools/ga4-report-summary" element={<ReportSummaryToolPage />} />
         <Route path="/terms" element={<LegalPage slug="terms" />} />
         <Route path="/privacy" element={<LegalPage slug="privacy" />} />
         <Route path="/refunds" element={<LegalPage slug="refunds" />} />

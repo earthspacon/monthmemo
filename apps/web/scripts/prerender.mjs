@@ -1,5 +1,5 @@
 // After `vite build` and the SSR build of src/prerender/entry.tsx: writes the prerendered files into dist/.
-import { readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -11,6 +11,8 @@ const { buildPrerenderedFiles } = await import(pathToFileURL(ENTRY).href);
 const files = buildPrerenderedFiles(readFileSync(path.join(DIST, "index.html"), "utf8"));
 
 for (const { file, content } of files) {
-  writeFileSync(path.join(DIST, file), content);
+  const target = path.join(DIST, file);
+  mkdirSync(path.dirname(target), { recursive: true });
+  writeFileSync(target, content);
 }
 console.log(`prerender: wrote ${files.map(({ file }) => file).join(", ")}`);
