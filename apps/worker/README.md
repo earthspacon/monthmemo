@@ -34,7 +34,7 @@ pnpm test
 pnpm exec vitest run -t 'MM-R19[ .]'
 ```
 
-Tests run inside workerd with the D1 migrations applied. Every outbound call (Google, the LLM API, Resend, Paddle,
+Tests run inside workerd with the D1 migrations applied. Every outbound call (Google, the LLM API, Brevo, Paddle,
 Turnstile) is answered by `test/fakes.ts`; an unexpected URL throws, so no test reaches a real service. Test names start
 with the id of the behaviour they cover, so `-t` selects one behaviour.
 

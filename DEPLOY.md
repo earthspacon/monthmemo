@@ -25,7 +25,7 @@ pnpm wrangler secret put BETTER_AUTH_SECRET --env production      # openssl rand
 pnpm wrangler secret put GOOGLE_CLIENT_ID --env production
 pnpm wrangler secret put GOOGLE_CLIENT_SECRET --env production
 pnpm wrangler secret put GROQ_API_KEY --env production            # key from console.groq.com; turn on Zero Data Retention in Settings → Data Controls
-pnpm wrangler secret put RESEND_API_KEY --env production
+pnpm wrangler secret put BREVO_API_KEY --env production
 pnpm wrangler secret put PADDLE_API_KEY --env production
 pnpm wrangler secret put PADDLE_WEBHOOK_SECRET --env production
 pnpm wrangler secret put TURNSTILE_SECRET_KEY --env production
@@ -56,10 +56,12 @@ Without `TURNSTILE_SECRET_KEY` sign-in is refused on purpose (it fails closed).
    events, and store its secret as `PADDLE_WEBHOOK_SECRET`. Store an API key as `PADDLE_API_KEY`.
 4. Set `PADDLE_ENV = "production"` and add the domain to Paddle's approved checkout domains.
 
-## 5. Resend
+## 5. Brevo
 
-Add and verify the sending domain in Resend (the production `MAIL_FROM` uses `mail.spacesonlabs.com`): add the SPF and DKIM
-DNS records it shows, wait until the domain is verified, then create the API key for `RESEND_API_KEY`.
+1. Brevo → Senders, domains, IPs → Domains: authenticate the domain of `MAIL_FROM` (`mail.spacesonlabs.com`). Add the records it
+   shows (the `brevo-code` `TXT`, two DKIM `CNAME`s, DMARC `TXT`) in Cloudflare DNS as **DNS only**, wait for "Authenticated".
+2. SMTP & API → API keys: a key with "Transactional email: All" goes into `BREVO_API_KEY`. The Free plan sends 300 emails a day,
+   shared with the studio's other products.
 
 ## 6. Turnstile
 

@@ -19,7 +19,7 @@ export type Env = {
   GOOGLE_CLIENT_ID?: string;
   GOOGLE_CLIENT_SECRET?: string;
   GROQ_API_KEY?: string;
-  RESEND_API_KEY?: string;
+  BREVO_API_KEY?: string;
   PADDLE_API_KEY?: string;
   PADDLE_WEBHOOK_SECRET?: string;
   TURNSTILE_SECRET_KEY?: string;

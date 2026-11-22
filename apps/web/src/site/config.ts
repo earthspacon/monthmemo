@@ -52,7 +52,7 @@ export const SUB_PROCESSORS = [
     name: "Groq, Inc.",
     purpose: "Writes the narrative from aggregate metrics (no training; inputs not retained by default)",
   },
-  { name: "Resend", purpose: "Sends sign-in, approval and client report emails" },
+  { name: "Brevo", purpose: "Sends sign-in, approval and client report emails" },
   { name: "Paddle.com", purpose: "Merchant of record: checkout, invoices, tax and refunds" },
 ];
 

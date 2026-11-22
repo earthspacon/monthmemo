@@ -2,7 +2,7 @@ import { PLANS } from "@monthmemo/contract";
 import { env } from "cloudflare:test";
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { fake, mailsTo, previousPeriodOf, type ResendMail } from "./fakes";
+import { fake, mailsTo, previousPeriodOf, type SentMail } from "./fakes";
 import {
   clearRunState,
   createConnectedAgency,
@@ -33,8 +33,8 @@ async function reportsOf(clientIds: string[]) {
   return results;
 }
 
-function mailText(mail: ResendMail) {
-  return `${mail.subject}\n${mail.text ?? ""}\n${mail.html ?? ""}`;
+function mailText(mail: SentMail) {
+  return `${mail.subject}\n${mail.text ?? ""}\n${mail.html}`;
 }
 
 describe("Monthly run", () => {

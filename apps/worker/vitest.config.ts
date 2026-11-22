@@ -12,7 +12,7 @@ export default defineConfig(async () => {
         main: "./src/index.ts",
         wrangler: { configPath: "./wrangler.toml" },
         miniflare: {
-          // Test-only values: every outbound call to Google, Groq, Resend, Paddle and Turnstile is faked in test/fakes.ts.
+          // Test-only values: every outbound call to Google, Groq, Brevo, Paddle and Turnstile is faked in test/fakes.ts.
           bindings: {
             TEST_MIGRATIONS: migrations,
             DEV_ROUTES: "1",
@@ -21,7 +21,7 @@ export default defineConfig(async () => {
             GOOGLE_CLIENT_ID: "test-client-id.apps.googleusercontent.com",
             GOOGLE_CLIENT_SECRET: "test-google-client-secret",
             GROQ_API_KEY: "test-groq-key",
-            RESEND_API_KEY: "test-resend-key",
+            BREVO_API_KEY: "xkeysib-test-key",
             PADDLE_API_KEY: "test-paddle-key",
             PADDLE_CLIENT_TOKEN: "test_paddle_client_token",
             PADDLE_WEBHOOK_SECRET: "pdl_ntfset_test_secret",

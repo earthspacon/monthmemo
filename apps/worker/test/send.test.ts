@@ -1,7 +1,7 @@
 import { env } from "cloudflare:test";
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { callsTo, fake, mailsTo, RESEND_URL } from "./fakes";
+import { BREVO_URL, callsTo, fake, mailsTo } from "./fakes";
 import {
   agencyIdOf,
   api,
@@ -35,8 +35,8 @@ function act({ cookie, reportId, action }: { cookie: string; reportId: string; a
   return api({ path: `/api/reports/${reportId}/${action}`, method: "POST", cookie });
 }
 
-function resendCallsTo(address: string) {
-  return callsTo(RESEND_URL).filter((call) => {
+function brevoCallsTo(address: string) {
+  return callsTo(BREVO_URL).filter((call) => {
     return call.body.includes(address);
   });
 }
@@ -64,9 +64,8 @@ describe("Review and send", () => {
       const mails = mailsTo(recipient.email);
       expect(mails).toHaveLength(1);
       const [mail] = mails;
-      expect(mail.from).toContain(`${profile.name} via MonthMemo`);
-      expect(mail.from).toContain(`<${MAIL_FROM_ADDRESS}>`);
-      expect([mail.reply_to].flat()).toEqual([profile.email]);
+      expect(mail.sender).toEqual({ name: `${profile.name} via MonthMemo`, email: MAIL_FROM_ADDRESS });
+      expect(mail.replyTo).toBe(profile.email);
       expect(mail.html).toContain("Example Bakery");
       expect(mail.text).toBeTruthy();
       expect(mail.headers?.["List-Unsubscribe"]).toContain(`${env.APP_URL}/u/${recipient.token}`);
@@ -121,12 +120,12 @@ describe("Review and send", () => {
     expect((await readReport(reportId)).status).toBe("send_failed");
     await runJobs(SEND_TRIES);
 
-    expect(resendCallsTo(failing)).toHaveLength(SEND_TRIES);
+    expect(brevoCallsTo(failing)).toHaveLength(SEND_TRIES);
     for (const recipient of [recipients[0], recipients[2]]) {
       expect(mailsTo(recipient.email)).toHaveLength(1);
     }
     const failureMails = mailsTo(profile.email).filter((mail) => {
-      return `${mail.subject}\n${mail.text ?? ""}\n${mail.html ?? ""}`.includes("Example Bakery");
+      return `${mail.subject}\n${mail.text ?? ""}\n${mail.html}`.includes("Example Bakery");
     });
     expect(failureMails).toHaveLength(1);
   });

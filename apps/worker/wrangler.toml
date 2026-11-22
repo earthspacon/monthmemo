@@ -29,7 +29,7 @@ migrations_dir = "migrations"
 crons = ["* * * * *"]
 
 # Secrets, set with `wrangler secret put <NAME> --env production` (locally in .dev.vars):
-#   BETTER_AUTH_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GROQ_API_KEY, RESEND_API_KEY,
+#   BETTER_AUTH_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GROQ_API_KEY, BREVO_API_KEY,
 #   PADDLE_API_KEY, PADDLE_WEBHOOK_SECRET, TURNSTILE_SECRET_KEY
 # Local defaults below; `--env production` uses the block at the end.
 [vars]

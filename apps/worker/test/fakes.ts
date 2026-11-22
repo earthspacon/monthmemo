@@ -3,13 +3,13 @@ import ga4RunReport from "../fixtures/google/ga4-run-report.json";
 import gscQuery from "../fixtures/google/gsc-query.json";
 import sites from "../fixtures/google/sites.json";
 
-// Every outbound call of the worker goes through this one fetch: Google, Groq, Resend, Paddle and Turnstile
+// Every outbound call of the worker goes through this one fetch: Google, Groq, Brevo, Paddle and Turnstile
 // answer from here, any other URL throws, so no test can reach a real service.
 export const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 export const GOOGLE_ACCOUNT_SUMMARIES_URL = "https://analyticsadmin.googleapis.com/v1beta/accountSummaries";
 export const GOOGLE_SITES_URL = "https://www.googleapis.com/webmasters/v3/sites";
 export const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
-export const RESEND_URL = "https://api.resend.com/emails";
+export const BREVO_URL = "https://api.brevo.com/v3/smtp/email";
 export const SITEVERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
 const RUN_REPORT_PATTERN = /^https:\/\/analyticsdata\.googleapis\.com\/v1beta\/properties\/([^/:]+):runReport$/;
 const SEARCH_ANALYTICS_PATTERN =
@@ -66,7 +66,7 @@ type FakeState = {
   emptyAccount: boolean;
   groqReplies: GroqReply[];
   failingRecipients: Set<string>;
-  resendFailsAll: boolean;
+  mailFailsAll: boolean;
 };
 
 export const fake: FakeState = createState();
@@ -86,7 +86,7 @@ function createState(): FakeState {
     emptyAccount: false,
     groqReplies: [],
     failingRecipients: new Set(),
-    resendFailsAll: false,
+    mailFailsAll: false,
   };
 }
 
@@ -112,18 +112,28 @@ export function callsTo(prefix: string) {
   });
 }
 
-export type ResendMail = {
-  from: string;
+export type SentMail = {
+  sender: { name?: string; email: string };
   to: string[];
   subject: string;
-  html?: string;
+  html: string;
   text?: string;
-  reply_to?: string | string[];
+  replyTo?: string;
   headers?: Record<string, string>;
 };
 
-// Mails Resend accepted (a failed call is recorded in fake.calls but is not a sent mail).
-export const sentMails: ResendMail[] = [];
+type BrevoRequest = {
+  sender: { name?: string; email: string };
+  to: { email: string }[];
+  subject: string;
+  htmlContent: string;
+  textContent?: string;
+  replyTo?: { email: string };
+  headers?: Record<string, string>;
+};
+
+// Mails Brevo accepted (a failed call is recorded in fake.calls but is not a sent mail).
+export const sentMails: SentMail[] = [];
 
 export function mailsTo(address: string) {
   return sentMails.filter((mail) => {
@@ -174,8 +184,8 @@ async function route({ request, body }: { request: Request; body: string }) {
   if (url === GROQ_URL) {
     return groq(body);
   }
-  if (url === RESEND_URL) {
-    return resend(body);
+  if (url === BREVO_URL) {
+    return brevo(body);
   }
   if (
     PADDLE_HOSTS.some((host) => {
@@ -438,19 +448,26 @@ function groq(body: string) {
   });
 }
 
-function resend(body: string) {
-  const mail: ResendMail = JSON.parse(body);
-  const recipients = Array.isArray(mail.to) ? mail.to : [mail.to];
+function brevo(body: string) {
+  const mail: BrevoRequest = JSON.parse(body);
+  const recipients = mail.to.map((recipient) => {
+    return recipient.email;
+  });
   const failing = recipients.some((address) => {
     return fake.failingRecipients.has(address);
   });
 
-  if (fake.resendFailsAll || failing) {
-    return Response.json(
-      { statusCode: 500, name: "internal_server_error", message: "Unexpected error" },
-      { status: 500 },
-    );
+  if (fake.mailFailsAll || failing) {
+    return Response.json({ code: "internal_error", message: "Unexpected error" }, { status: 500 });
   }
-  sentMails.push({ ...mail, to: recipients });
-  return Response.json({ id: crypto.randomUUID() });
+  sentMails.push({
+    sender: mail.sender,
+    to: recipients,
+    subject: mail.subject,
+    html: mail.htmlContent,
+    text: mail.textContent,
+    replyTo: mail.replyTo?.email,
+    headers: mail.headers,
+  });
+  return Response.json({ messageId: `<${crypto.randomUUID()}@smtp-relay.mailin.fr>` }, { status: 201 });
 }
