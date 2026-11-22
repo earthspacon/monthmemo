@@ -8,6 +8,7 @@
     "build": "tsc --noEmit && vite build && vite build --ssr src/prerender/entry.tsx --outDir dist-prerender && node scripts/prerender.mjs",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
     "test:e2e": "vitest run --config vitest.e2e.config.ts"
   },
   "dependencies": {

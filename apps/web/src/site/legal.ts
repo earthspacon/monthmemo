@@ -1,6 +1,6 @@
 import { PLANS, TRIAL_DAYS } from "@monthmemo/contract";
 
-import { REFUND_DAYS, SELLER_IDENTITY, SUB_PROCESSORS, SUPPORT_EMAIL } from "./config";
+import { REFUND_DAYS, SELLER_LEGAL_NAME, SUB_PROCESSORS, SUPPORT_EMAIL } from "./config";
 
 export type LegalSlug = "terms" | "privacy" | "refunds" | "dpa";
 
@@ -18,7 +18,7 @@ const SUB_PROCESSOR_LINES = SUB_PROCESSORS.map((item) => `${item.name}: ${item.p
 
 const OPERATOR_SECTION: LegalSection = {
   heading: "Who we are",
-  paragraphs: [`MonthMemo is operated by ${SELLER_IDENTITY}. Contact: ${SUPPORT_EMAIL}.`],
+  paragraphs: [`MonthMemo is operated by ${SELLER_LEGAL_NAME}. Contact: ${SUPPORT_EMAIL}.`],
 };
 
 export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {

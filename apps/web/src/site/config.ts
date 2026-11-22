@@ -1,11 +1,10 @@
 import { PLANS, TRIAL_DAYS } from "@monthmemo/contract";
 
-// The owner fills these two before the Paddle domain review. Every public page reads them from this file only.
-export const SELLER_LEGAL_NAME = "SELLER_LEGAL_NAME";
+// Every public page reads the seller name and contact from this file only.
+export const SELLER_LEGAL_NAME = "Spaceson Labs";
 export const CONTACT_EMAIL = "monthmemo@spacesonlabs.com";
 
-export const SELLER_BRAND = "Spaceson Labs";
-export const SELLER_IDENTITY = `${SELLER_BRAND} (${SELLER_LEGAL_NAME})`;
+export const SELLER_BRAND = SELLER_LEGAL_NAME;
 export const SUPPORT_EMAIL = CONTACT_EMAIL;
 
 export const PRODUCT_NAME = "MonthMemo";
