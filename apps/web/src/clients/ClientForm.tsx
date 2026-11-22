@@ -40,7 +40,7 @@ const Field = ({
       </label>
       {children}
       {hint && !error && <p className="mt-1 text-xs text-slate-500">{hint}</p>}
-      {error && <p className="mt-1 text-xs text-rose-700">{error}</p>}
+      {error && <p className="mt-1 text-xs text-rose-800">{error}</p>}
     </div>
   );
 };
@@ -111,7 +111,7 @@ const SourcePickers = () => {
           })}
         </select>
       </Field>
-      {errors.source && <p className="text-xs text-rose-700">{errors.source}</p>}
+      {errors.source && <p className="text-xs text-rose-800">{errors.source}</p>}
     </div>
   );
 };

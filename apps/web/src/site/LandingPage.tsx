@@ -8,7 +8,7 @@ import { SiteLayout } from "./SiteLayout";
 
 const BeforeSheet = () => {
   return (
-    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+    <div className="force-light overflow-hidden rounded-xl border border-slate-200 bg-surface shadow-sm">
       <div className="flex items-center justify-between gap-2 border-b border-slate-200 bg-slate-50 px-4 py-2 text-xs text-slate-600">
         <span>{EXAMPLE_REPORT.client}_report_oct.xlsx</span>
         <ExampleLabel />
@@ -76,8 +76,8 @@ export const LandingPage = () => {
           <ol className="grid gap-4 md:grid-cols-3">
             {HOW_IT_WORKS.map((step, index) => {
               return (
-                <li key={step.title} className="space-y-2 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-                  <span className="text-sm font-semibold text-brand-700">Step {index + 1}</span>
+                <li key={step.title} className="space-y-2 rounded-xl border border-slate-200 bg-surface p-5 shadow-sm">
+                  <span className="text-sm font-semibold text-brand-ink">Step {index + 1}</span>
                   <h3 className="font-semibold">{step.title}</h3>
                   <p className="text-sm text-slate-600">{step.text}</p>
                 </li>

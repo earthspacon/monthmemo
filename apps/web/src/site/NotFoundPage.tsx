@@ -16,7 +16,7 @@ export const NotFoundPage = () => {
           <Link to="/" className={BUTTON_PRIMARY}>
             Go to the home page
           </Link>
-          <Link to="/pricing" className="px-3 py-2 text-sm font-medium text-brand-700">
+          <Link to="/pricing" className="px-3 py-2 text-sm font-medium text-brand-ink">
             See pricing
           </Link>
         </div>

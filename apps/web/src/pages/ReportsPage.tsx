@@ -23,11 +23,11 @@ const FAILURE_LABELS: Record<FailureReason, string> = {
 const STATUS_TONES: Record<ReportStatus, string> = {
   pending: "bg-slate-100 text-slate-600",
   building: "bg-slate-100 text-slate-600",
-  draft: "bg-brand-50 text-brand-700",
-  failed: "bg-rose-50 text-rose-700",
+  draft: "bg-brand-50 text-brand-ink",
+  failed: "bg-rose-50 text-rose-800",
   sending: "bg-amber-50 text-amber-800",
   sent: "bg-emerald-50 text-emerald-700",
-  send_failed: "bg-rose-50 text-rose-700",
+  send_failed: "bg-rose-50 text-rose-800",
   skipped: "bg-slate-100 text-slate-600",
 };
 
@@ -45,7 +45,7 @@ function FailureNote({ reason }: { reason: FailureReason }) {
   const needsReconnect = reason === "google_reconnect_needed";
 
   return (
-    <p className="text-sm text-rose-700">
+    <p className="text-sm text-rose-800">
       {FAILURE_LABELS[reason]}
       {needsReconnect && (
         <>

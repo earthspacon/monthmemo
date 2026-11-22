@@ -25,7 +25,7 @@ export const PlanCards = ({ renderAction }: { renderAction?: (plan: Plan) => Rea
               <span className="text-sm text-slate-600"> / month</span>
             </p>
             <p className="flex items-center gap-2 text-sm text-slate-700">
-              <Check className="size-4 text-brand-600" />
+              <Check className="size-4 text-brand-ink" />
               Up to {config.clientLimit} clients
             </p>
             {renderAction?.(plan)}

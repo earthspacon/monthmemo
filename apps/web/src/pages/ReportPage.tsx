@@ -78,7 +78,7 @@ const ProgressState = ({ status }: { status: ReportStatus }) => {
   if (status === "send_failed") {
     return (
       <Card className="space-y-2 p-8 text-sm">
-        <p className="flex items-center gap-2 font-medium text-rose-700">
+        <p className="flex items-center gap-2 font-medium text-rose-800">
           <AlertTriangle className="size-4" />
           Email could not be sent
         </p>
@@ -94,7 +94,7 @@ const FailureState = ({ report }: { report: ReportDetailDto }) => {
 
   return (
     <Card className="space-y-2 p-8 text-sm">
-      <p className="flex items-center gap-2 font-medium text-rose-700">
+      <p className="flex items-center gap-2 font-medium text-rose-800">
         <AlertTriangle className="size-4" />
         This report could not be built
       </p>

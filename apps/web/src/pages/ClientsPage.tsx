@@ -111,7 +111,7 @@ const DeleteDialog = () => {
         role="dialog"
         aria-modal="true"
         aria-label="Delete client"
-        className="w-full max-w-sm space-y-4 rounded-xl bg-white p-5 shadow-lg"
+        className="w-full max-w-sm space-y-4 rounded-xl bg-surface p-5 shadow-lg"
       >
         <p className="text-sm text-slate-700">
           This removes the client and every report built for it. This can't be undone.

@@ -5,6 +5,7 @@ import { Navigate, NavLink, Outlet, useLocation } from "react-router-dom";
 
 import { googleStatusRequested } from "../connect/model";
 import { $sessionError, $sessionStatus, appStarted, signOutClicked } from "../session/model";
+import { ThemeToggle } from "../shared/ThemeToggle";
 import { BUTTON_SECONDARY, ErrorState, LoadingState } from "../shared/ui";
 import { PlanBanner } from "./PlanBanner";
 import { ReconnectBanner } from "./ReconnectBanner";
@@ -57,10 +58,13 @@ export const AppShell = () => {
             );
           })}
         </nav>
-        <button type="button" className={BUTTON_SECONDARY} onClick={() => signOut()}>
-          <LogOut className="size-4" />
-          Sign out
-        </button>
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <button type="button" className={BUTTON_SECONDARY} onClick={() => signOut()}>
+            <LogOut className="size-4" />
+            Sign out
+          </button>
+        </div>
       </header>
       <PlanBanner />
       <ReconnectBanner />

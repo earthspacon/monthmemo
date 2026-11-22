@@ -158,9 +158,12 @@ export const ReportSummaryToolPage = () => {
 
 const SummaryCard = ({ result }: { result: SummaryResult }) => {
   return (
-    <section aria-live="polite" className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+    <section
+      aria-live="polite"
+      className="force-light overflow-hidden rounded-xl border border-slate-200 bg-surface shadow-sm"
+    >
       <div className="space-y-4 p-4">
-        <p className="text-sm font-semibold text-brand-700">{result.clientName}</p>
+        <p className="text-sm font-semibold text-brand-ink">{result.clientName}</p>
         <p className="text-xs text-slate-500">{result.period}</p>
         <p className="text-sm leading-6 whitespace-pre-line text-slate-700">{result.narrative}</p>
         <dl className="grid grid-cols-3 gap-2">

@@ -42,7 +42,7 @@ export const AgencyAnalyticsAlternativePage = () => {
             {COMPETITOR_SOURCES.map((source) => {
               return (
                 <li key={source.url}>
-                  <a href={source.url} rel="noopener noreferrer nofollow" className="text-brand-700 underline">
+                  <a href={source.url} rel="noopener noreferrer nofollow" className="text-brand-ink underline">
                     {source.label}
                   </a>
                 </li>
@@ -53,7 +53,7 @@ export const AgencyAnalyticsAlternativePage = () => {
 
         <section className="space-y-3">
           <h2 className="text-xl font-semibold">Side by side</h2>
-          <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+          <div className="overflow-x-auto rounded-xl border border-slate-200 bg-surface">
             <table className="w-full text-left text-sm">
               <thead className="bg-slate-50 text-slate-600">
                 <tr>

@@ -7,13 +7,13 @@ export const ExampleLabel = () => {
 // A made-up report for the made-up "Example Bakery": what the client's inbox shows after the agency approves.
 export const ExampleEmail = () => {
   return (
-    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+    <div className="force-light overflow-hidden rounded-xl border border-slate-200 bg-surface shadow-sm">
       <div className="flex items-center justify-between gap-2 border-b border-slate-200 bg-slate-50 px-4 py-2 text-xs text-slate-600">
         <span className="truncate">{EXAMPLE_REPORT.subject}</span>
         <ExampleLabel />
       </div>
       <div className="space-y-4 p-4">
-        <p className="text-sm font-semibold text-brand-700">{EXAMPLE_REPORT.client}</p>
+        <p className="text-sm font-semibold text-brand-ink">{EXAMPLE_REPORT.client}</p>
         <p className="text-xs text-slate-500">{EXAMPLE_REPORT.period}</p>
         <p className="text-sm leading-6 text-slate-700">{EXAMPLE_REPORT.narrative}</p>
         <dl className="grid grid-cols-3 gap-2">

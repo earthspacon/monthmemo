@@ -61,7 +61,7 @@ const Explainer = () => {
 const CallbackError = ({ title }: { title: string }) => {
   return (
     <Card className="space-y-4 p-6">
-      <p className="flex items-center gap-2 font-medium text-rose-700">
+      <p className="flex items-center gap-2 font-medium text-rose-800">
         <AlertTriangle className="size-5 shrink-0" />
         {title}
       </p>

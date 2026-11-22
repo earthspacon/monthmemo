@@ -31,7 +31,10 @@ const HeaderPreview = () => {
   const accent = COLOUR.test(form.accentColor) ? form.accentColor : FALLBACK_ACCENT;
 
   return (
-    <section aria-label={PREVIEW_LABEL} className="min-w-0 rounded-xl border border-slate-200 bg-white p-4">
+    <section
+      aria-label={PREVIEW_LABEL}
+      className="force-light min-w-0 rounded-xl border border-slate-200 bg-surface p-4"
+    >
       {logoShown && <img src={form.logoUrl} alt="" className="mb-2 max-h-10" />}
       <p className="truncate text-xl font-bold" style={{ color: accent }}>
         {form.displayName}
@@ -71,7 +74,7 @@ const BrandForm = () => {
                 onChange={(event) => change({ field, value: event.target.value })}
               />
             </label>
-            {errors[field] && <p className="mt-1 text-sm text-rose-700">{errors[field]}</p>}
+            {errors[field] && <p className="mt-1 text-sm text-rose-800">{errors[field]}</p>}
           </div>
         );
       })}
