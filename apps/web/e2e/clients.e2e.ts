@@ -37,7 +37,7 @@ it("MM-R37.a the clients list shows skeleton rows while loading", async () => {
   await delayApi({ page, path: "/api/clients" });
   await page.goto("/app/clients");
 
-  await page.getByRole("status", { name: "Loading" }).waitFor();
+  await page.getByRole("status", { name: "Loading" }).first().waitFor();
 });
 
 it("MM-R37.b an agency without clients sees No clients yet and Add client", async () => {

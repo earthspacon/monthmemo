@@ -63,6 +63,8 @@ it("the public header CTA stays on one line at 390", async () => {
   // The e2e build skips the prerender, so /pricing is reached in-app from the footer.
   await page.locator("footer").getByRole("link", { name: "Pricing" }).click();
   await page.waitForURL("**/pricing");
+  // Each public page mounts its own header, so measure only after the pricing page is in.
+  await page.getByRole("heading", { level: 1, name: /pricing/i }).waitFor();
   await expectOneLineSiteHeader({ page, path: "/pricing" });
 });
 

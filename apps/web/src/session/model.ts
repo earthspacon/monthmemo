@@ -19,7 +19,30 @@ export const meFx = createEffect(async () => {
   return apiRequest<MeDto>({ path: "/api/me" });
 });
 
-// Public pages only ask whether a session exists, so a visitor never triggers /api/me.
+// Set after the app loads with a session, so public pages ask about the session only on a browser that has signed in before.
+const SIGNED_IN_HINT = "monthmemo.signedIn";
+
+const readSignedInHintFx = createEffect(() => {
+  try {
+    return localStorage.getItem(SIGNED_IN_HINT) === "1";
+  } catch {
+    return false;
+  }
+});
+
+const writeSignedInHintFx = createEffect((signedIn: boolean) => {
+  try {
+    if (signedIn) {
+      localStorage.setItem(SIGNED_IN_HINT, "1");
+    } else {
+      localStorage.removeItem(SIGNED_IN_HINT);
+    }
+  } catch {
+    // Storage can be blocked; public pages then keep the signed-out header.
+  }
+});
+
+// Public pages only ask whether a session exists, so they never trigger /api/me.
 export const siteSessionFx = createEffect(async () => {
   const session = await apiRequest<{ user: { id: string } } | null>({ path: "/api/auth/get-session" });
   return session !== null;
@@ -69,23 +92,30 @@ sample({
 
 sample({
   clock: sitePageOpened,
+  target: readSignedInHintFx,
+});
+
+sample({
+  clock: readSignedInHintFx.doneData,
+  filter: Boolean,
   target: siteSessionFx,
 });
 
 sample({
   clock: siteSessionFx.doneData,
-  target: $hasSession,
+  target: [$hasSession, writeSignedInHintFx],
 });
 
 sample({
   clock: meFx.doneData,
   fn: () => true,
-  target: $hasSession,
+  target: [$hasSession, writeSignedInHintFx],
 });
 
 sample({
   clock: signOutFx.finally,
-  target: $hasSession.reinit,
+  fn: () => false,
+  target: [$hasSession, writeSignedInHintFx],
 });
 
 sample({

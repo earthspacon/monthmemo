@@ -127,7 +127,10 @@ it("MM-R35.h a signed-in visitor gets Open dashboard in the header and the hero,
   const signedOutHeader = await header.boundingBox();
   const signedOutHero = await page.getByRole("heading", { level: 1 }).boundingBox();
 
+  // The app marks this browser as signed in; the site checks the session only then.
   await seedSession({ context });
+  await page.goto("/app/reports");
+  await page.getByRole("heading", { name: "Reports" }).waitFor();
   await page.goto("/");
   await header.getByRole("link", { name: "Open dashboard" }).waitFor();
   expect(await header.getByRole("link", { name: "Sign in", exact: true }).count()).toBe(0);
@@ -140,6 +143,21 @@ it("MM-R35.h a signed-in visitor gets Open dashboard in the header and the hero,
   await page.waitForURL((url) => {
     return url.pathname === "/app/reports";
   });
+});
+
+it("MM-R35.j a first-time visitor's public pages make no session request", async () => {
+  const { page } = await openPage({ viewport: MOBILE });
+  const sessionCalls: string[] = [];
+  page.on("request", (request) => {
+    if (request.url().includes("/api/auth/get-session")) {
+      sessionCalls.push(request.url());
+    }
+  });
+  await page.goto("/");
+  await page.locator("header").getByRole("link", { name: "Sign in", exact: true }).waitFor();
+  await page.waitForTimeout(500);
+
+  expect(sessionCalls).toEqual([]);
 });
 
 it("MM-R35.i sign-in is one screen: Google first and a note that the same button creates the account", async () => {
