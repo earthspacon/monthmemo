@@ -42,6 +42,8 @@ const GOOGLE_CALLBACK_PATH = "/api/auth/callback/google";
 // SPA routes get the app's index.html; every other unknown path is a 404.
 const APP_SHELL_PATH = /^\/(app|app\/.*|sign-in)$/;
 const APP_SHELL_ASSET = "/";
+// Prerendered 404.html. Assets use not_found_handling = "none", so every unknown path reaches the Worker.
+const NOT_FOUND_ASSET = "/404";
 
 const APP_CSP = [
   "default-src 'self'",
@@ -115,9 +117,24 @@ async function routeRequest({ deps, request }: { deps: Deps; request: Request })
     return deps.env.ASSETS.fetch(new URL(APP_SHELL_ASSET, request.url));
   }
   if (READ_METHODS.has(request.method) && deps.env.ASSETS) {
-    return deps.env.ASSETS.fetch(request);
+    return serveNotFoundPage({ assets: deps.env.ASSETS, request });
   }
   throw new HttpError(404, "not_found", "Not found");
+}
+
+// A real 404 for unknown public paths, so search engines don't index them as empty pages.
+async function serveNotFoundPage({ assets, request }: { assets: Fetcher; request: Request }) {
+  const page = await assets.fetch(new URL(NOT_FOUND_ASSET, request.url));
+  const headers = new Headers({
+    "content-type": "text/html; charset=utf-8",
+    "x-robots-tag": "noindex",
+    "cache-control": "no-cache",
+  });
+  const body = page.ok
+    ? page.body
+    : '<!doctype html><title>Page not found</title><h1>Page not found</h1><a href="/">Home</a>';
+
+  return new Response(request.method === "HEAD" ? null : body, { status: 404, headers });
 }
 
 // A connect that came back to the connect page without an error stored fresh tokens, so the old flag is stale.
