@@ -29,6 +29,10 @@ export async function startWorker({
   vars?: Record<string, string>;
 }): Promise<RunningWorker> {
   const url = `http://localhost:${port}`;
+  // waitForServer accepts any answer, so a server already on the port would get every test request.
+  if (await isAnswering(url)) {
+    throw new Error(`port ${port} is already in use`);
+  }
   const persistDir = mkdtempSync(path.join(tmpdir(), "monthmemo-e2e-"));
   execFileSync("pnpm", ["exec", "wrangler", "d1", "migrations", "apply", "DB", "--local", "--persist-to", persistDir], {
     cwd: WORKER_DIR,
@@ -93,10 +97,7 @@ async function waitForServer(url: string) {
   const deadline = Date.now() + READY_TIMEOUT_MS;
 
   while (Date.now() < deadline) {
-    const ready = await fetch(`${url}/api/me`)
-      .then(() => true)
-      .catch(() => false);
-    if (ready) {
+    if (await isAnswering(url)) {
       return;
     }
     await new Promise((resolve) => {
@@ -104,4 +105,10 @@ async function waitForServer(url: string) {
     });
   }
   throw new Error(`wrangler dev did not start on ${url}`);
+}
+
+function isAnswering(url: string) {
+  return fetch(`${url}/api/me`)
+    .then(() => true)
+    .catch(() => false);
 }

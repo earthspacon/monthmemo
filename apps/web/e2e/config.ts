@@ -4,7 +4,8 @@ import path from "node:path";
 
 import { chromium } from "playwright";
 
-export const E2E_PORT = 8790;
+// InboxSieve uses 8790 and PriceDawn 8795; their e2e runs can share this box.
+export const E2E_PORT = 8791;
 export const E2E_URL = `http://localhost:${E2E_PORT}`;
 export const PADDLE_TEST_SECRET = "pdl_ntfset_e2e_test_secret";
 export const PADDLE_TEST_CLIENT_TOKEN = "test_e2e_client_token";
