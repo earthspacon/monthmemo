@@ -1,10 +1,11 @@
 import { type ReactNode, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 
+import { sitePageOpened } from "../session/model";
 import { ThemeToggle } from "../shared/ThemeToggle";
-import { BUTTON_PRIMARY } from "../shared/ui";
-import { FOOTER_LINKS, PRODUCT_NAME, SELLER_BRAND, START_CTA, SUPPORT_EMAIL } from "./config";
+import { FOOTER_LINKS, PRODUCT_NAME, SELLER_BRAND, SUPPORT_EMAIL } from "./config";
 import { findSeoPage } from "./seo";
+import { HeaderEntry } from "./SessionLinks";
 
 export const SiteLogo = ({ to }: { to: string }) => {
   return (
@@ -28,22 +29,23 @@ export const SiteLayout = ({ children }: { children: ReactNode }) => {
     }
   }, [pathname]);
 
+  useEffect(() => {
+    sitePageOpened();
+  }, []);
+
   return (
     <div className="flex min-h-screen flex-col">
       <header className="border-b border-slate-200 bg-surface">
-        <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3">
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-2 sm:py-3">
           <SiteLogo to="/" />
-          <nav className="flex items-center gap-4 text-sm">
+          <nav className="flex items-center gap-2 text-sm sm:gap-4">
             <Link to="/pricing" className="text-slate-600 hover:text-slate-900 max-sm:hidden">
               Pricing
             </Link>
-            <Link to="/sign-in" className="text-slate-600 hover:text-slate-900 max-sm:hidden">
-              Sign in
-            </Link>
-            <ThemeToggle />
-            <Link to="/sign-in" className={`${BUTTON_PRIMARY} whitespace-nowrap`}>
-              {START_CTA}
-            </Link>
+            <span className="max-sm:hidden">
+              <ThemeToggle />
+            </span>
+            <HeaderEntry />
           </nav>
         </div>
       </header>
@@ -53,7 +55,7 @@ export const SiteLayout = ({ children }: { children: ReactNode }) => {
           <span>
             © {SELLER_BRAND} · {SUPPORT_EMAIL}
           </span>
-          <nav className="flex flex-wrap gap-4">
+          <nav className="flex flex-wrap items-center gap-4">
             {FOOTER_LINKS.map((link) => {
               return (
                 <Link key={link.to} to={link.to} className="hover:text-slate-900">
@@ -61,6 +63,9 @@ export const SiteLayout = ({ children }: { children: ReactNode }) => {
                 </Link>
               );
             })}
+            <span className="sm:hidden">
+              <ThemeToggle />
+            </span>
           </nav>
         </div>
       </footer>

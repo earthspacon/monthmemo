@@ -99,3 +99,55 @@ it("MM-R35.e the Google sign-in carries ?next= as the callback", async () => {
   await expect.poll(() => bodies.length).toBe(1);
   expect(bodies[0]).toMatchObject({ provider: "google", callbackURL: "/app/clients" });
 });
+
+it("MM-R35.g a visitor sees a quiet Sign in link left of the primary CTA in the 390 px header", async () => {
+  const { page } = await openPage({ viewport: MOBILE });
+  await page.goto("/");
+
+  const header = page.locator("header");
+  const signIn = header.getByRole("link", { name: "Sign in", exact: true });
+  const start = header.getByRole("link", { name: "Start free month" });
+  await signIn.waitFor();
+  const signInBox = await signIn.boundingBox();
+  const startBox = await start.boundingBox();
+  expect(signInBox).not.toBeNull();
+  expect((signInBox?.x ?? 0) + (signInBox?.width ?? 0)).toBeLessThanOrEqual(startBox?.x ?? 0);
+  expect(signInBox?.height ?? 0).toBeGreaterThanOrEqual(44);
+  await expectNoHorizontalScroll(page);
+
+  await signIn.click();
+  await page.waitForURL("**/sign-in");
+});
+
+it("MM-R35.h a signed-in visitor gets Open dashboard in the header and the hero, with no layout shift", async () => {
+  const { context, page } = await openPage({ viewport: MOBILE });
+  const header = page.locator("header");
+  await page.goto("/");
+  await header.getByRole("link", { name: "Sign in", exact: true }).waitFor();
+  const signedOutHeader = await header.boundingBox();
+  const signedOutHero = await page.getByRole("heading", { level: 1 }).boundingBox();
+
+  await seedSession({ context });
+  await page.goto("/");
+  await header.getByRole("link", { name: "Open dashboard" }).waitFor();
+  expect(await header.getByRole("link", { name: "Sign in", exact: true }).count()).toBe(0);
+  expect(await header.getByRole("link", { name: "Start free month" }).count()).toBe(0);
+  expect(await header.boundingBox()).toEqual(signedOutHeader);
+  expect(await page.getByRole("heading", { level: 1 }).boundingBox()).toEqual(signedOutHero);
+
+  const heroLink = page.locator("main").getByRole("link", { name: "Open dashboard" });
+  await heroLink.click();
+  await page.waitForURL((url) => {
+    return url.pathname === "/app/reports";
+  });
+});
+
+it("MM-R35.i sign-in is one screen: Google first and a note that the same button creates the account", async () => {
+  const { page } = await openPage({ viewport: MOBILE });
+  await stubTurnstile({ page });
+  await page.goto("/sign-in");
+
+  await page.getByText("New here? Same button creates your account.").waitFor();
+  await page.getByRole("link", { name: "MonthMemo" }).waitFor();
+  expect(await page.evaluate(() => document.documentElement.scrollHeight)).toBeLessThanOrEqual(MOBILE.height);
+});

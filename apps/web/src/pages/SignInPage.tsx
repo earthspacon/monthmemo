@@ -1,11 +1,12 @@
 import { useGate, useUnit } from "effector-react";
 import { Loader2 } from "lucide-react";
 import { useEffect } from "react";
-import { Navigate, useSearchParams } from "react-router-dom";
+import { Link, Navigate, useSearchParams } from "react-router-dom";
 
 import { $me, $sessionStatus, appStarted } from "../session/model";
 import { TurnstileWidget } from "../session/TurnstileWidget";
 import { BUTTON_PRIMARY, Banner, Card } from "../shared/ui";
+import { SiteLogo } from "../site/SiteLayout";
 import {
   $signInError,
   $turnstileRound,
@@ -51,14 +52,16 @@ export const SignInPage = () => {
   const message = error || describeError(params.get("error"));
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center gap-4 p-4">
-      <Card className="flex flex-col gap-4 p-6">
-        <h1 className="text-xl font-semibold text-slate-900">Sign in to MonthMemo</h1>
-        <p className="text-sm text-slate-600">
-          Use your Google account. We only read your name and email here; Google Analytics access is a separate step.
-        </p>
+    <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center gap-6 p-4">
+      <div className="flex justify-center">
+        <SiteLogo to="/" />
+      </div>
+      <Card className="flex flex-col gap-4 p-6 text-center">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Sign in to MonthMemo</h1>
+          <p className="text-sm text-slate-600">Your first month is free, no card needed.</p>
+        </div>
         {message ? <Banner tone="danger">{message}</Banner> : null}
-        <TurnstileWidget round={round} onSolved={turnstileSolved} onExpired={turnstileExpired} />
         <button
           type="button"
           className={`${BUTTON_PRIMARY} w-full`}
@@ -68,7 +71,20 @@ export const SignInPage = () => {
           {isRedirecting ? <Loader2 className="size-4 animate-spin" /> : null}
           {isRedirecting ? "Redirecting…" : "Continue with Google"}
         </button>
+        <TurnstileWidget round={round} onSolved={turnstileSolved} onExpired={turnstileExpired} />
+        <p className="text-sm text-slate-600">New here? Same button creates your account.</p>
       </Card>
+      <p className="text-center text-xs text-slate-500">
+        We only read your name and email here; Google Analytics access is a separate step. See our{" "}
+        <Link to="/terms" className="underline hover:text-slate-900">
+          Terms
+        </Link>{" "}
+        and{" "}
+        <Link to="/privacy" className="underline hover:text-slate-900">
+          Privacy
+        </Link>
+        .
+      </p>
     </main>
   );
 };

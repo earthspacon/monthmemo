@@ -7,6 +7,7 @@ export type SessionStatus = "loading" | "signed_out" | "error" | "ready";
 
 export const appStarted = createEvent();
 export const signOutClicked = createEvent();
+export const sitePageOpened = createEvent();
 
 export const meFx = createEffect(async () => {
   // get-session answers 200 null when signed out, so a visitor causes no 401 in the console.
@@ -18,6 +19,12 @@ export const meFx = createEffect(async () => {
   return apiRequest<MeDto>({ path: "/api/me" });
 });
 
+// Public pages only ask whether a session exists, so a visitor never triggers /api/me.
+export const siteSessionFx = createEffect(async () => {
+  const session = await apiRequest<{ user: { id: string } } | null>({ path: "/api/auth/get-session" });
+  return session !== null;
+});
+
 export const signOutFx = createEffect(() => {
   return apiCommand({ path: "/api/auth/sign-out", method: "POST", body: {} });
 });
@@ -25,6 +32,7 @@ export const signOutFx = createEffect(() => {
 export const $me = createStore<MeDto | null>(null);
 export const $sessionStatus = createStore<SessionStatus>("loading");
 export const $sessionError = createStore("");
+export const $hasSession = createStore(false);
 
 sample({
   clock: appStarted,
@@ -57,6 +65,27 @@ sample({
 sample({
   clock: meFx.failData,
   target: $me.reinit,
+});
+
+sample({
+  clock: sitePageOpened,
+  target: siteSessionFx,
+});
+
+sample({
+  clock: siteSessionFx.doneData,
+  target: $hasSession,
+});
+
+sample({
+  clock: meFx.doneData,
+  fn: () => true,
+  target: $hasSession,
+});
+
+sample({
+  clock: signOutFx.finally,
+  target: $hasSession.reinit,
 });
 
 sample({

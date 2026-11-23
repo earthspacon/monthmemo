@@ -1,9 +1,10 @@
 import { Link } from "react-router-dom";
 
 import { BUTTON_PRIMARY, BUTTON_SECONDARY } from "../shared/ui";
-import { BEFORE_ROWS, EXAMPLE_REPORT, FAQ, HERO, HOW_IT_WORKS, START_CTA } from "./config";
+import { BEFORE_ROWS, EXAMPLE_REPORT, FAQ, HERO, HOW_IT_WORKS } from "./config";
 import { ExampleEmail, ExampleLabel } from "./ExampleEmail";
 import { PricingSection } from "./PricingPage";
+import { StartLink } from "./SessionLinks";
 import { SiteLayout } from "./SiteLayout";
 
 const BeforeSheet = () => {
@@ -48,9 +49,7 @@ export const LandingPage = () => {
           <p className="text-lg text-slate-700">{HERO.subtitle}</p>
           <p className="text-slate-600">{HERO.detail}</p>
           <div className="flex flex-wrap justify-center gap-3">
-            <Link to="/sign-in" className={BUTTON_PRIMARY}>
-              {START_CTA}
-            </Link>
+            <StartLink className={BUTTON_PRIMARY} />
             <Link to="/pricing" className={BUTTON_SECONDARY}>
               See pricing
             </Link>
