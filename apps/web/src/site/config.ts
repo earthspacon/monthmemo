@@ -1,4 +1,4 @@
-import { PLANS, TRIAL_DAYS } from "@monthmemo/contract";
+import { PLAN, TRIAL_DAYS } from "@monthmemo/contract";
 
 // Every public page reads the seller name and contact from this file only.
 export const SELLER_LEGAL_NAME = "Spaceson Labs";
@@ -11,6 +11,7 @@ export const PRODUCT_NAME = "MonthMemo";
 export const LEGAL_UPDATED = "November 21, 2026";
 export const REFUND_DAYS = 14;
 export const START_CTA = "Start free month";
+export const DASHBOARD_CTA = "Open dashboard";
 
 const CENTS_PER_DOLLAR = 100;
 
@@ -18,15 +19,17 @@ export function formatDollars(cents: number) {
   return `$${cents / CENTS_PER_DOLLAR}`;
 }
 
-export const STARTER_PRICE = formatDollars(PLANS.starter.priceCents);
-export const GROWTH_PRICE = formatDollars(PLANS.growth.priceCents);
+export const PLAN_PRICE = formatDollars(PLAN.priceCents);
+export const PLAN_PRICE_LINE = "/ month · cancel anytime";
+export const PLAN_FEATURES = [
+  `Up to ${PLAN.clientLimit} clients`,
+  "A drafted report for every client on the 4th",
+  "Your logo and colours on every email",
+  "Nothing is sent until you approve it",
+];
 
-// Price per client at a full plan, rounded up to a whole cent: Growth is the low end, Starter the high end.
-function perClientDollars({ priceCents, clientLimit }: { priceCents: number; clientLimit: number }) {
-  return (Math.ceil(priceCents / clientLimit) / CENTS_PER_DOLLAR).toFixed(2);
-}
-
-export const PER_CLIENT_RANGE = `$${perClientDollars(PLANS.growth)}-${perClientDollars(PLANS.starter)}`;
+// Price per client with the plan full, rounded up to a whole cent.
+export const PER_CLIENT_PRICE = `$${(Math.ceil(PLAN.priceCents / PLAN.clientLimit) / CENTS_PER_DOLLAR).toFixed(2)}`;
 
 // A07: AgencyAnalytics lists $20 per client billed yearly and $25 billed monthly.
 export const COMPETITOR_PER_CLIENT_RANGE = "$20-25";
@@ -103,7 +106,7 @@ export const EXAMPLE_REPORT = {
 export const FAQ = [
   {
     question: "Is there a free trial?",
-    answer: `Yes. Your first ${TRIAL_DAYS} days are free with up to ${PLANS.starter.clientLimit} clients, and no card is needed. If you don't subscribe, sending stops when the trial ends; nothing is deleted.`,
+    answer: `Yes. Your first ${TRIAL_DAYS} days are free with up to ${PLAN.clientLimit} clients, and no card is needed. If you don't subscribe, sending stops when the trial ends; nothing is deleted.`,
   },
   {
     question: "What access do you get to our clients' data?",
@@ -117,7 +120,7 @@ export const FAQ = [
   },
   {
     question: "How does pricing work?",
-    answer: `${PLANS.starter.label} is ${STARTER_PRICE} a month for ${PLANS.starter.clientLimit} clients, ${PLANS.growth.label} is ${GROWTH_PRICE} a month for ${PLANS.growth.clientLimit} clients. Billing runs through Paddle and you can cancel any time.`,
+    answer: `One plan: ${PLAN_PRICE} a month for up to ${PLAN.clientLimit} clients. Billing runs through Paddle and you can cancel any time.`,
   },
 ];
 
@@ -128,7 +131,11 @@ export const PROBLEM_POINTS = [
 ];
 
 export const COMPARE_ROWS = [
-  { label: "Price per client", us: PER_CLIENT_RANGE, them: COMPETITOR_PER_CLIENT_RANGE },
+  {
+    label: "Price per client",
+    us: `${PER_CLIENT_PRICE} with ${PLAN.clientLimit} clients`,
+    them: COMPETITOR_PER_CLIENT_RANGE,
+  },
   { label: "Delivery", us: "Branded email with a written narrative", them: "Dashboards and PDF exports" },
   { label: "Sources", us: "GA4 and Search Console", them: "Dozens of integrations" },
   { label: "Approval", us: "You approve every send", them: "Scheduled reports" },

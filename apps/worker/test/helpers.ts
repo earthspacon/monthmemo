@@ -1,4 +1,4 @@
-import type { AgencyStatus, Plan, ReportMetrics, ReportStatus } from "@monthmemo/contract";
+import type { AgencyStatus, ReportMetrics, ReportStatus } from "@monthmemo/contract";
 import { createExecutionContext, createScheduledController, env, SELF, waitOnExecutionContext } from "cloudflare:test";
 
 import type { Env } from "../src/env";
@@ -191,18 +191,13 @@ export function todayUtc() {
 
 export async function setAgency({
   agencyId,
-  plan,
   status,
   trialEndsAt,
 }: {
   agencyId: string;
-  plan?: Plan;
   status?: AgencyStatus;
   trialEndsAt?: string;
 }) {
-  if (plan) {
-    await db.prepare("UPDATE agencies SET plan = ? WHERE id = ?").bind(plan, agencyId).run();
-  }
   if (status) {
     await db.prepare("UPDATE agencies SET status = ? WHERE id = ?").bind(status, agencyId).run();
   }
@@ -213,10 +208,9 @@ export async function setAgency({
 
 // An agency row without a Google login, for cron tests that never call Google.
 export async function seedAgency({
-  plan = "starter",
   status = "trialing",
   email = uniqueEmail("seeded"),
-}: { plan?: Plan; status?: AgencyStatus; email?: string } = {}) {
+}: { status?: AgencyStatus; email?: string } = {}) {
   const userId = crypto.randomUUID();
   const agencyId = crypto.randomUUID();
   const at = new Date().toISOString();
@@ -228,10 +222,10 @@ export async function seedAgency({
     .run();
   await db
     .prepare(
-      `INSERT INTO agencies (id, user_id, plan, status, trial_ends_at, display_name, accent_color, reply_to, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, 'Seeded Agency', '#2563eb', ?, ?, ?)`,
+      `INSERT INTO agencies (id, user_id, status, trial_ends_at, display_name, accent_color, reply_to, created_at, updated_at)
+       VALUES (?, ?, ?, ?, 'Seeded Agency', '#2563eb', ?, ?, ?)`,
     )
-    .bind(agencyId, userId, plan, status, trialEndsAt, email, at, at)
+    .bind(agencyId, userId, status, trialEndsAt, email, at, at)
     .run();
   return { agencyId, userId, email };
 }

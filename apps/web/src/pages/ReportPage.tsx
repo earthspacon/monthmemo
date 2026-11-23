@@ -24,7 +24,7 @@ const PlanNotice = () => {
     <Banner tone="warning">
       Your plan is inactive, so reports can't be approved.{" "}
       <Link to="/app/billing" className="font-medium underline">
-        Choose a plan in billing
+        Subscribe in billing
       </Link>
     </Banner>
   );

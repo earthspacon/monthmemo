@@ -1,6 +1,6 @@
-import { PLANS } from "@monthmemo/contract";
+import { PLAN } from "@monthmemo/contract";
 
-import { FAQ, formatDollars, GROWTH_PRICE, PRODUCT_NAME, STARTER_PRICE } from "./config";
+import { FAQ, PLAN_PRICE, PRODUCT_NAME } from "./config";
 
 export const SITE_URL = "https://monthmemo.spacesonlabs.com";
 export const OG_IMAGE_PATH = "/og.png";
@@ -21,8 +21,8 @@ export const SEO_PAGES: SeoPage[] = [
   },
   {
     path: "/pricing",
-    title: `Pricing: Starter ${STARTER_PRICE}/mo, Growth ${GROWTH_PRICE}/mo | MonthMemo`,
-    description: `Starter ${STARTER_PRICE} a month for ${PLANS.starter.clientLimit} clients, Growth ${GROWTH_PRICE} a month for ${PLANS.growth.clientLimit} clients. The first month is free, no card.`,
+    title: `Pricing: ${PLAN_PRICE} a month, cancel anytime | MonthMemo`,
+    description: `One plan: ${PLAN_PRICE} a month for up to ${PLAN.clientLimit} clients, cancel anytime. The first month is free, no card.`,
   },
   {
     path: "/agencyanalytics-alternative",
@@ -68,17 +68,16 @@ export function findSeoPage(path: string) {
   return SEO_PAGES.find((page) => page.path === path);
 }
 
-function buildOffer({ name, cents }: { name: string; cents: number }) {
+function buildOffer({ cents }: { cents: number }) {
   return {
     "@type": "Offer",
-    name,
     price: String(cents / 100),
     priceCurrency: "USD",
     url: `${SITE_URL}/pricing`,
   };
 }
 
-// JSON-LD for a prerendered page: the product with both offers from PLANS everywhere, the FAQ on the landing page.
+// JSON-LD for a prerendered page: the product with its one offer from PLAN everywhere, the FAQ on the landing page.
 export function buildJsonLd(page: SeoPage) {
   const graph: object[] = [
     {
@@ -88,10 +87,7 @@ export function buildJsonLd(page: SeoPage) {
       description: SEO_PAGES[0].description,
       applicationCategory: "BusinessApplication",
       operatingSystem: "Web",
-      offers: [
-        buildOffer({ name: PLANS.starter.label, cents: PLANS.starter.priceCents }),
-        buildOffer({ name: PLANS.growth.label, cents: PLANS.growth.priceCents }),
-      ],
+      offers: buildOffer({ cents: PLAN.priceCents }),
     },
   ];
 
@@ -117,9 +113,7 @@ export function buildLlmsTxt() {
     "> MonthMemo sends each client of a small marketing agency a branded monthly email that explains what changed in Google Analytics 4 and Search Console, and why. The agency approves every report before it is sent.",
     "",
     "## Pricing (USD per month, tax added by Paddle where due)",
-    ...Object.values(PLANS).map((plan) => {
-      return `- ${plan.label}: ${formatDollars(plan.priceCents)}/month, up to ${plan.clientLimit} clients.`;
-    }),
+    `- One plan: ${PLAN_PRICE}/month, up to ${PLAN.clientLimit} clients, cancel anytime.`,
     "- The first month is free, no card.",
     "",
     "## Pages",

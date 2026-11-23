@@ -2,7 +2,7 @@ import type { Deps } from "../deps";
 import { isRecord, json } from "../http";
 import { findBillingRowBySubscription, getBillingRow, saveSubscription, type BillingRow } from "../repo/agencies";
 import { claimOwnerAlert } from "../repo/usage";
-import { findPlanByPrice } from "./prices";
+import { isPlanPrice } from "./prices";
 import { verifyPaddleSignature } from "./signature";
 import { agencyStatusOf, PADDLE_STATUSES, type PaddleStatus } from "./state";
 
@@ -68,14 +68,12 @@ async function applyEvent({ deps, eventType, data }: { deps: Deps; eventType: st
   if (!row) {
     return "unknown_agency";
   }
-  const plan = findPlanByPrice({ env: deps.env, priceId: subscription.priceId });
-  if (!plan) {
+  if (!isPlanPrice({ env: deps.env, priceId: subscription.priceId })) {
     return "unknown_price";
   }
   await saveSubscription({
     db: deps.db,
     agencyId: row.id,
-    plan,
     status: agencyStatusOf(subscription.status),
     customerId: subscription.customerId,
     subscriptionId: subscription.id,

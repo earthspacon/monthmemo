@@ -9,8 +9,7 @@ declare namespace Cloudflare {
     GOOGLE_FAKE: string;
     PADDLE_ENV: string;
     PADDLE_CLIENT_TOKEN: string;
-    PADDLE_PRICE_STARTER: string;
-    PADDLE_PRICE_GROWTH: string;
+    PADDLE_PRICE: string;
     LLM_DAILY_USD_CAP: string;
     LLM_AGENCY_DAILY_USD_CAP: string;
     OWNER_ALERT_EMAIL: string;

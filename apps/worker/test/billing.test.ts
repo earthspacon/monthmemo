@@ -1,4 +1,4 @@
-import { type AgencyStatus, type Plan, PLANS } from "@monthmemo/contract";
+import { type AgencyStatus, PLAN } from "@monthmemo/contract";
 import { env, SELF } from "cloudflare:test";
 import { beforeEach, describe, expect, it } from "vitest";
 
@@ -27,8 +27,7 @@ import {
 
 const MINUTE_MS = 60 * 1000;
 const DAY_MS = 24 * 60 * MINUTE_MS;
-const STARTER_PRICE_ID = "pri_starter_example";
-const GROWTH_PRICE_ID = "pri_growth_example";
+const PRICE_ID = "pri_monthly_example";
 const UNKNOWN_PRICE_ID = "pri_unknown_example";
 
 type SubscriptionEventType =
@@ -60,10 +59,7 @@ function subscriptionEvent({
 }
 
 async function agencyState(agencyId: string) {
-  return db
-    .prepare("SELECT plan, status FROM agencies WHERE id = ?")
-    .bind(agencyId)
-    .first<{ plan: Plan; status: AgencyStatus }>();
+  return db.prepare("SELECT status FROM agencies WHERE id = ?").bind(agencyId).first<{ status: AgencyStatus }>();
 }
 
 describe("Billing", () => {
@@ -71,7 +67,7 @@ describe("Billing", () => {
     await clearRunState();
   });
 
-  it("MM-R23 the billing summary answers the trial and both paid plans from the shared plan table", async () => {
+  it("MM-R23 the billing summary answers the trial and the one $4 plan from the shared plan", async () => {
     const { cookie, profile } = await signInWithGoogle();
     const agencyId = await agencyIdOf(profile.email);
     const row = await db
@@ -83,24 +79,11 @@ describe("Billing", () => {
 
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({
-      plan: "starter",
       status: "trialing",
       trialEndsAt: row?.trial_ends_at,
-      clientLimit: PLANS.starter.clientLimit,
-      plans: [
-        {
-          plan: "starter",
-          priceCents: PLANS.starter.priceCents,
-          clientLimit: PLANS.starter.clientLimit,
-          paddlePriceId: STARTER_PRICE_ID,
-        },
-        {
-          plan: "growth",
-          priceCents: PLANS.growth.priceCents,
-          clientLimit: PLANS.growth.clientLimit,
-          paddlePriceId: GROWTH_PRICE_ID,
-        },
-      ],
+      priceCents: PLAN.priceCents,
+      clientLimit: PLAN.clientLimit,
+      paddlePriceId: PRICE_ID,
       paddleClientToken: env.PADDLE_CLIENT_TOKEN,
       paddleEnv: "sandbox",
     });
@@ -116,7 +99,7 @@ describe("Billing", () => {
     const body = subscriptionEvent({
       type: "subscription.activated",
       status: "active",
-      priceId: GROWTH_PRICE_ID,
+      priceId: PRICE_ID,
       agencyId,
     });
 
@@ -129,46 +112,41 @@ describe("Billing", () => {
 
     expect(forged.status).toBe(401);
     expect(unsigned.status).toBe(401);
-    expect(await agencyState(agencyId)).toEqual({ plan: "starter", status: "trialing" });
+    expect(await agencyState(agencyId)).toEqual({ status: "trialing" });
     expect(mailsTo(env.OWNER_ALERT_EMAIL).length).toBeGreaterThanOrEqual(1);
   });
 
-  it("MM-R24 signed subscription events set the plan by price id and the status", async () => {
+  it("MM-R24 signed subscription events with the plan price set the status", async () => {
     const { agencyId } = await seedAgency();
     const steps: Array<{
       type: SubscriptionEventType;
       status: string;
       priceId: string;
-      plan: Plan;
       expected: AgencyStatus;
     }> = [
       {
         type: "subscription.created",
         status: "active",
-        priceId: STARTER_PRICE_ID,
-        plan: "starter",
+        priceId: PRICE_ID,
         expected: "active",
       },
       {
         type: "subscription.activated",
         status: "active",
-        priceId: STARTER_PRICE_ID,
-        plan: "starter",
+        priceId: PRICE_ID,
         expected: "active",
       },
-      { type: "subscription.updated", status: "active", priceId: GROWTH_PRICE_ID, plan: "growth", expected: "active" },
+      { type: "subscription.updated", status: "active", priceId: PRICE_ID, expected: "active" },
       {
         type: "subscription.past_due",
         status: "past_due",
-        priceId: GROWTH_PRICE_ID,
-        plan: "growth",
+        priceId: PRICE_ID,
         expected: "past_due",
       },
       {
         type: "subscription.canceled",
         status: "canceled",
-        priceId: GROWTH_PRICE_ID,
-        plan: "growth",
+        priceId: PRICE_ID,
         expected: "canceled",
       },
     ];
@@ -178,19 +156,19 @@ describe("Billing", () => {
         body: subscriptionEvent({ type: step.type, status: step.status, priceId: step.priceId, agencyId }),
       });
       expect(response.status).toBe(200);
-      expect(await agencyState(agencyId)).toEqual({ plan: step.plan, status: step.expected });
+      expect(await agencyState(agencyId)).toEqual({ status: step.expected });
     }
   });
 
   it("MM-R24 a signed event with an unknown price id answers 200 and changes nothing", async () => {
-    const { agencyId } = await seedAgency({ plan: "starter", status: "active" });
+    const { agencyId } = await seedAgency({ status: "active" });
 
     const response = await postPaddleEvent({
       body: subscriptionEvent({ type: "subscription.updated", status: "active", priceId: UNKNOWN_PRICE_ID, agencyId }),
     });
 
     expect(response.status).toBe(200);
-    expect(await agencyState(agencyId)).toEqual({ plan: "starter", status: "active" });
+    expect(await agencyState(agencyId)).toEqual({ status: "active" });
   });
 
   it("MM-R25 the maintenance cron expires a trial past its end and keeps a running one", async () => {

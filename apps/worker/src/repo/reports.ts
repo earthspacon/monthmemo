@@ -1,10 +1,9 @@
-import type { FailureReason, Plan, ReportStatus } from "@monthmemo/contract";
+import type { FailureReason, ReportStatus } from "@monthmemo/contract";
 
 import { newId } from "../ids";
 
 export type RunnableAgency = {
   id: string;
-  plan: Plan;
 };
 
 export type ClientIdRow = {
@@ -46,7 +45,7 @@ const PENDING_REPORTS_SQL = `SELECT reports.id, reports.agency_id AS agencyId, r
 
 export async function listRunnableAgencies({ db }: { db: D1Database }) {
   const { results } = await db
-    .prepare("SELECT id, plan FROM agencies WHERE status IN ('trialing', 'active') ORDER BY created_at, id")
+    .prepare("SELECT id FROM agencies WHERE status IN ('trialing', 'active') ORDER BY created_at, id")
     .all<RunnableAgency>();
   return results ?? [];
 }

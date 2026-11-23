@@ -14,7 +14,8 @@ import {
 
 const APP_HEADER_MAX_HEIGHT = 56;
 const SITE_HEADER_MAX_HEIGHT = 64;
-const ONE_LINE_BUTTON_MAX_HEIGHT = 40;
+// Buttons are 44 px tall on phones (tap target); a second line of text would make them 60+.
+const ONE_LINE_BUTTON_MAX_HEIGHT = 48;
 const SAME_ROW_TOLERANCE = 4;
 const APP_NAV = ["Reports", "Clients", "Brand", "Billing", "Google"];
 const APP_PAGES = ["/app/reports", "/app/clients"];

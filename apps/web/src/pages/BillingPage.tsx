@@ -1,4 +1,4 @@
-import { PLANS, type BillingDto } from "@monthmemo/contract";
+import type { BillingDto } from "@monthmemo/contract";
 import { useGate, useUnit } from "effector-react";
 
 import {
@@ -8,10 +8,10 @@ import {
   BillingGate,
   billing,
   billingRequested,
-  choosePlanClicked,
   manageBillingClicked,
+  subscribeClicked,
 } from "../billing/model";
-import { PlanCards } from "../pricing/PlanCards";
+import { PlanCard } from "../pricing/PlanCard";
 import { BUTTON_PRIMARY, BUTTON_SECONDARY, Banner, ErrorState, PageHeader, SkeletonRows } from "../shared/ui";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -29,21 +29,21 @@ function statusLine(data: BillingDto) {
     return `${daysLeft(data.trialEndsAt)} days left in your free month`;
   }
   if (isPaying(data.status)) {
-    return `${PLANS[data.plan].label} plan · up to ${data.clientLimit} clients`;
+    return `Subscribed · up to ${data.clientLimit} clients`;
   }
-  return "Choose a plan to keep sending reports.";
+  return "Subscribe to keep sending reports.";
 }
 
 export const BillingPage = () => {
   useGate(BillingGate);
-  const { data, status, error, checkoutError, checkoutBusy, portalBusy, choose, manage, retry } = useUnit({
+  const { data, status, error, checkoutError, checkoutBusy, portalBusy, subscribe, manage, retry } = useUnit({
     data: billing.$data,
     status: billing.$status,
     error: billing.$error,
     checkoutError: $checkoutError,
     checkoutBusy: $isCheckoutBusy,
     portalBusy: $isPortalBusy,
-    choose: choosePlanClicked,
+    subscribe: subscribeClicked,
     manage: manageBillingClicked,
     retry: billingRequested,
   });
@@ -61,7 +61,7 @@ export const BillingPage = () => {
         <Banner tone="danger">Payment failed — reports are paused. Update your payment method to resume them.</Banner>
       ) : null}
       {data.status === "canceled" ? (
-        <Banner tone="warning">Your subscription was canceled, so reports are paused. Choose a plan to resume.</Banner>
+        <Banner tone="warning">Your subscription was canceled, so reports are paused. Subscribe to resume.</Banner>
       ) : null}
       {checkoutError ? <Banner tone="danger">{checkoutError}</Banner> : null}
       {isPaying(data.status) ? (
@@ -69,14 +69,17 @@ export const BillingPage = () => {
           Manage billing
         </button>
       ) : (
-        <PlanCards
-          renderAction={(plan) => {
-            return (
-              <button type="button" className={BUTTON_PRIMARY} disabled={checkoutBusy} onClick={() => choose(plan)}>
-                Choose {PLANS[plan].label}
-              </button>
-            );
-          }}
+        <PlanCard
+          action={
+            <button
+              type="button"
+              className={`${BUTTON_PRIMARY} w-full`}
+              disabled={checkoutBusy}
+              onClick={() => subscribe()}
+            >
+              Subscribe
+            </button>
+          }
         />
       )}
     </div>

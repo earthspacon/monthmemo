@@ -1,8 +1,9 @@
+import { PLAN } from "@monthmemo/contract";
 import { describe, expect, it } from "vitest";
 
-import { CONTACT_EMAIL, FOOTER_LINKS, SELLER_LEGAL_NAME, SUB_PROCESSORS } from "./config";
+import { CONTACT_EMAIL, FAQ, FOOTER_LINKS, PLAN_FEATURES, SELLER_LEGAL_NAME, SUB_PROCESSORS } from "./config";
 import { LEGAL_DOCS } from "./legal";
-import { buildLlmsTxt, SEO_PAGES, SITE_URL } from "./seo";
+import { buildJsonLd, buildLlmsTxt, SEO_PAGES, SITE_URL } from "./seo";
 
 const PRODUCTION_HOST = "https://monthmemo.spacesonlabs.com";
 
@@ -46,5 +47,35 @@ describe("Free report summary page", () => {
   it("is linked from the footer and llms.txt", () => {
     expect(FOOTER_LINKS.map((link) => link.to)).toContain(TOOL_PATH);
     expect(buildLlmsTxt()).toContain(`${SITE_URL}${TOOL_PATH}`);
+  });
+});
+
+describe("One $4 plan", () => {
+  const PUBLIC_COPY = () => {
+    return JSON.stringify({ SEO_PAGES, FAQ, LEGAL_DOCS, PLAN_FEATURES, llms: buildLlmsTxt() });
+  };
+
+  it("sells one plan at $4 a month for up to 15 clients", () => {
+    expect(PLAN).toEqual({ priceCents: 400, clientLimit: 15 });
+    expect(buildLlmsTxt()).toContain("- One plan: $4/month, up to 15 clients, cancel anytime.");
+  });
+
+  it("names no tier, toggle or pack in public copy, and no price but $4", () => {
+    const copy = PUBLIC_COPY();
+    expect(copy).not.toMatch(/\b(Starter|Growth|Solo|Agency plan|Pro)\b|yearly|annual|\bpacks?\b/i);
+    expect(new Set(copy.match(/\$\d+/g))).toEqual(new Set(["$4"]));
+  });
+
+  it("puts one $4 offer in the JSON-LD of every page", () => {
+    for (const page of SEO_PAGES) {
+      const graph = buildJsonLd(page)["@graph"] as Array<{ "@type": string; offers?: unknown }>;
+      const app = graph.find((node) => node["@type"] === "SoftwareApplication");
+      expect(app?.offers).toEqual({
+        "@type": "Offer",
+        price: "4",
+        priceCurrency: "USD",
+        url: `${SITE_URL}/pricing`,
+      });
+    }
   });
 });

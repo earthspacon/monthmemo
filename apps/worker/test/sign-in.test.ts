@@ -1,4 +1,4 @@
-import { PLANS, TRIAL_DAYS } from "@monthmemo/contract";
+import { PLAN, TRIAL_DAYS } from "@monthmemo/contract";
 import { describe, expect, it } from "vitest";
 
 import { api, countRows, db, googleProfile, signInWithGoogle, startSignIn, uniqueEmail } from "./helpers";
@@ -39,7 +39,7 @@ describe("Google sign-in", () => {
     expect(new Set(google.searchParams.get("scope")?.split(" "))).toEqual(new Set(["openid", "email", "profile"]));
   });
 
-  it("MM-R2 the first Google sign-in creates one trialing starter agency with brand defaults, a second creates none", async () => {
+  it("MM-R2 the first Google sign-in creates one trialing agency with brand defaults, a second creates none", async () => {
     const signedUpAt = new Date();
     const profile = googleProfile({ email: uniqueEmail("first"), name: "Riley Park" });
     const { cookie } = await signInWithGoogle({ profile });
@@ -48,7 +48,6 @@ describe("Google sign-in", () => {
       .prepare("SELECT agencies.* FROM agencies JOIN users ON users.id = agencies.user_id WHERE users.email = ?")
       .bind(profile.email)
       .first<{
-        plan: string;
         status: string;
         trial_ends_at: string;
         display_name: string;
@@ -62,7 +61,6 @@ describe("Google sign-in", () => {
     );
 
     expect(agency).toMatchObject({
-      plan: "starter",
       status: "trialing",
       display_name: "Riley Park",
       reply_to: profile.email,
@@ -75,7 +73,7 @@ describe("Google sign-in", () => {
     expect(me.status).toBe(200);
     expect(await me.json()).toMatchObject({
       email: profile.email,
-      agency: { plan: "starter", status: "trialing", clientLimit: PLANS.starter.clientLimit, clientCount: 0 },
+      agency: { status: "trialing", clientLimit: PLAN.clientLimit, clientCount: 0 },
     });
 
     await signInWithGoogle({ profile });

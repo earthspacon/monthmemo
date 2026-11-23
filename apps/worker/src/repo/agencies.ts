@@ -1,4 +1,4 @@
-import { PLANS, TRIAL_DAYS, type AgencyStatus, type BrandDto, type Plan } from "@monthmemo/contract";
+import { TRIAL_DAYS, type AgencyStatus, type BrandDto } from "@monthmemo/contract";
 
 import { newId } from "../ids";
 
@@ -11,7 +11,6 @@ const DEFAULT_ACCENT = "#2563eb";
 export type AgencyRow = {
   id: string;
   userId: string;
-  plan: Plan;
   status: AgencyStatus;
   trialEndsAt: string | null;
   displayName: string;
@@ -39,7 +38,6 @@ export async function createAgency({
   email,
   name,
   now,
-  plan = "starter",
   status = "trialing",
 }: {
   db: D1Database;
@@ -47,18 +45,17 @@ export async function createAgency({
   email: string;
   name: string;
   now: Date;
-  plan?: Plan;
   status?: AgencyStatus;
 }) {
   const at = now.toISOString();
   const id = newId();
   await db
     .prepare(
-      `INSERT INTO agencies (id, user_id, plan, status, trial_ends_at, display_name, accent_color, reply_to, created_at, updated_at)
-       VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?9)
+      `INSERT INTO agencies (id, user_id, status, trial_ends_at, display_name, accent_color, reply_to, created_at, updated_at)
+       VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?8)
        ON CONFLICT (user_id) DO NOTHING`,
     )
-    .bind(id, userId, plan, status, trialEndsAt(now).toISOString(), name.trim() || email, DEFAULT_ACCENT, email, at)
+    .bind(id, userId, status, trialEndsAt(now).toISOString(), name.trim() || email, DEFAULT_ACCENT, email, at)
     .run();
   return id;
 }
@@ -66,7 +63,7 @@ export async function createAgency({
 export async function getAgencyByUserId({ db, userId }: { db: D1Database; userId: string }) {
   const row = await db
     .prepare(
-      `SELECT id, user_id AS userId, plan, status, trial_ends_at AS trialEndsAt, display_name AS displayName,
+      `SELECT id, user_id AS userId, status, trial_ends_at AS trialEndsAt, display_name AS displayName,
          google_needs_reconnect AS googleNeedsReconnect
        FROM agencies WHERE user_id = ?`,
     )
@@ -104,10 +101,6 @@ export async function countClients({ db, agencyId }: { db: D1Database; agencyId:
   return row?.count ?? 0;
 }
 
-export function clientLimitOf(plan: Plan) {
-  return PLANS[plan].clientLimit;
-}
-
 export async function getBrand({ db, agencyId }: { db: D1Database; agencyId: string }) {
   return db
     .prepare(
@@ -139,14 +132,13 @@ export async function updateBrand({
 
 export type BillingRow = {
   id: string;
-  plan: Plan;
   status: AgencyStatus;
   trialEndsAt: string | null;
   paddleCustomerId: string | null;
   paddleSubscriptionId: string | null;
 };
 
-const BILLING_COLUMNS = `id, plan, status, trial_ends_at AS trialEndsAt, paddle_customer_id AS paddleCustomerId,
+const BILLING_COLUMNS = `id, status, trial_ends_at AS trialEndsAt, paddle_customer_id AS paddleCustomerId,
   paddle_subscription_id AS paddleSubscriptionId`;
 
 export async function getBillingRow({ db, agencyId }: { db: D1Database; agencyId: string }) {
@@ -163,7 +155,6 @@ export async function findBillingRowBySubscription({ db, subscriptionId }: { db:
 export async function saveSubscription({
   db,
   agencyId,
-  plan,
   status,
   customerId,
   subscriptionId,
@@ -171,7 +162,6 @@ export async function saveSubscription({
 }: {
   db: D1Database;
   agencyId: string;
-  plan: Plan;
   status: AgencyStatus;
   customerId: string | null;
   subscriptionId: string;
@@ -179,10 +169,10 @@ export async function saveSubscription({
 }) {
   await db
     .prepare(
-      `UPDATE agencies SET plan = ?, status = ?, paddle_customer_id = COALESCE(?, paddle_customer_id),
+      `UPDATE agencies SET status = ?, paddle_customer_id = COALESCE(?, paddle_customer_id),
          paddle_subscription_id = ?, updated_at = ? WHERE id = ?`,
     )
-    .bind(plan, status, customerId, subscriptionId, now.toISOString(), agencyId)
+    .bind(status, customerId, subscriptionId, now.toISOString(), agencyId)
     .run();
 }
 

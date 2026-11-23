@@ -9,8 +9,7 @@ export const E2E_PORT = 8798;
 export const E2E_URL = `http://localhost:${E2E_PORT}`;
 export const PADDLE_TEST_SECRET = "pdl_ntfset_e2e_test_secret";
 export const PADDLE_TEST_CLIENT_TOKEN = "test_e2e_client_token";
-export const PADDLE_TEST_PRICE_STARTER = "pri_e2e_starter";
-export const PADDLE_TEST_PRICE_GROWTH = "pri_e2e_growth";
+export const PADDLE_TEST_PRICE = "pri_e2e_monthly";
 // Cloudflare's "always passes" Turnstile secret; the SPA build uses the matching test sitekey.
 export const TURNSTILE_TEST_SECRET = "1x0000000000000000000000000000000AA";
 

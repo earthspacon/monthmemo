@@ -1,22 +1,12 @@
-export type Plan = "starter" | "growth";
-
 export type PlanConfig = {
-  label: string;
   priceCents: number;
   clientLimit: number;
 };
 
-export const PLANS: Record<Plan, PlanConfig> = {
-  starter: {
-    label: "Starter",
-    priceCents: 900,
-    clientLimit: 10,
-  },
-  growth: {
-    label: "Growth",
-    priceCents: 1900,
-    clientLimit: 30,
-  },
+// MonthMemo sells one paid plan; every price and limit on the site, in the app and in billing comes from here.
+export const PLAN: PlanConfig = {
+  priceCents: 400,
+  clientLimit: 15,
 };
 
 export const TRIAL_DAYS = 30;

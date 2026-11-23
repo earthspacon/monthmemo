@@ -50,7 +50,6 @@ export type {
   ClientDto as ClientRow,
   FailureReason,
   GoogleSourcesDto as Sources,
-  Plan,
   ReportListItemDto as ReportRow,
   ReportStatus,
 } from "@monthmemo/contract";
@@ -127,19 +126,17 @@ function expectOk({ response, label }: { response: { status: number }; label: st
   }
 }
 
-// Signs the context in as an agency. Calling it again for the same email keeps the agency and sets plan/status.
+// Signs the context in as an agency. Calling it again for the same email keeps the agency and sets its status.
 export async function seedSession({
   context,
   email = uniqueEmail("agency"),
-  plan,
   status,
 }: {
   context: BrowserContext;
   email?: string;
-  plan?: Plan;
   status?: AgencyStatus;
 }) {
-  const response = await apiJson({ context, path: "/dev/session", method: "POST", body: { email, plan, status } });
+  const response = await apiJson({ context, path: "/dev/session", method: "POST", body: { email, status } });
   expectOk({ response, label: "POST /dev/session" });
   return { email };
 }
@@ -160,16 +157,8 @@ export async function seedGoogle({
 }
 
 // A signed-in agency with both Google sources connected: the starting point of most app pages.
-export async function seedConnectedAgency({
-  context,
-  plan,
-  status,
-}: {
-  context: BrowserContext;
-  plan?: Plan;
-  status?: AgencyStatus;
-}) {
-  const session = await seedSession({ context, plan, status });
+export async function seedConnectedAgency({ context, status }: { context: BrowserContext; status?: AgencyStatus }) {
+  const session = await seedSession({ context, status });
   await seedGoogle({ context });
   return session;
 }

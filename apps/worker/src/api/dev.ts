@@ -1,4 +1,4 @@
-import { PLANS, type AgencyStatus, type FailureReason, type Plan, type ReportStatus } from "@monthmemo/contract";
+import { type AgencyStatus, type FailureReason, type ReportStatus } from "@monthmemo/contract";
 
 import { createAuth } from "../auth";
 import { GA4_SCOPE, GSC_SCOPE } from "../google/client";
@@ -36,10 +36,6 @@ const COOKIE_SIGNATURE_BYTES_HASH = { name: "HMAC", hash: "SHA-256" };
 const BASIC_SCOPES = ["openid", "email", "profile"];
 // The fake Google client never sends it anywhere; it only marks the identity as able to refresh.
 const DEV_REFRESH_TOKEN = "dev-refresh-token";
-
-function isPlan(value: unknown): value is Plan {
-  return typeof value === "string" && value in PLANS;
-}
 
 function isStatus(value: unknown): value is AgencyStatus {
   return typeof value === "string" && STATUSES.some((status) => status === value);
@@ -126,12 +122,11 @@ async function upsertGoogleIdentity({
     .run();
 }
 
-// Dev-only: signs a browser in as an agency without Google. Calling it again keeps the agency and sets plan/status.
+// Dev-only: signs a browser in as an agency without Google. Calling it again keeps the agency and sets its status.
 export const devRoutes: Route<PublicContext>[] = [
   route("POST", "/dev/session", async ({ deps, request }) => {
     const data = await readJson(request);
     const email = readString({ data, key: "email", maxLength: EMAIL_MAX_LENGTH }).trim().toLowerCase();
-    const plan = isPlan(data.plan) ? data.plan : undefined;
     const status = isStatus(data.status) ? data.status : undefined;
     const now = deps.now();
 
@@ -142,10 +137,8 @@ export const devRoutes: Route<PublicContext>[] = [
     const userId = await ensureUser({ db: deps.db, email, now });
     await createAgency({ db: deps.db, userId, email, name: email.split("@")[0], now });
     await deps.db
-      .prepare(
-        "UPDATE agencies SET plan = COALESCE(?, plan), status = COALESCE(?, status), updated_at = ? WHERE user_id = ?",
-      )
-      .bind(plan ?? null, status ?? null, now.toISOString(), userId)
+      .prepare("UPDATE agencies SET status = COALESCE(?, status), updated_at = ? WHERE user_id = ?")
+      .bind(status ?? null, now.toISOString(), userId)
       .run();
 
     const context = await createAuth(deps.env).$context;

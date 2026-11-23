@@ -14,7 +14,7 @@ export const PlanBanner = () => {
   return (
     <div className="mb-4">
       <Banner tone="warning">
-        Your free month ended. Choose a plan on the{" "}
+        Your free month ended. Subscribe on the{" "}
         <Link to="/app/billing" className="font-medium underline">
           billing page
         </Link>{" "}

@@ -1,7 +1,6 @@
-import { PLANS, type ClientDto } from "@monthmemo/contract";
+import type { ClientDto } from "@monthmemo/contract";
 import { useGate, useUnit } from "effector-react";
 import { Pencil, Trash2 } from "lucide-react";
-import { Link } from "react-router-dom";
 
 import { ClientForm } from "../clients/ClientForm";
 import { formatRunDate } from "../clients/lib";
@@ -31,8 +30,6 @@ import {
   PageHeader,
   SkeletonRows,
 } from "../shared/ui";
-
-const UPGRADE_LABEL = `Upgrade to Growth for ${PLANS.growth.clientLimit} clients`;
 
 const RecipientList = ({ client }: { client: ClientDto }) => {
   return (
@@ -135,7 +132,8 @@ const LimitNotice = () => {
   if (limit.overLimit) {
     return (
       <Banner tone="warning">
-        Your plan covers {limit.limit} clients, so only the first {limit.limit} get reports. Remove clients or upgrade.
+        Your plan covers {limit.limit} clients, so only the first {limit.limit} get reports. Remove a client to include
+        another.
       </Banner>
     );
   }
@@ -143,14 +141,7 @@ const LimitNotice = () => {
     return null;
   }
   return (
-    <Banner tone="info">
-      You're using all {limit.limit} clients on your plan.{" "}
-      {limit.canUpgrade && (
-        <Link to="/app/billing" className="font-medium underline">
-          {UPGRADE_LABEL}
-        </Link>
-      )}
-    </Banner>
+    <Banner tone="info">You're using all {limit.limit} clients on your plan. Remove a client to add another.</Banner>
   );
 };
 

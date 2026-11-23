@@ -49,9 +49,9 @@ Without `TURNSTILE_SECRET_KEY` sign-in is refused on purpose (it fails closed).
 
 ## 4. Paddle
 
-1. In the Paddle dashboard create two products with a monthly price each: Starter and Growth.
-2. Put the price ids into `PADDLE_PRICE_STARTER` and `PADDLE_PRICE_GROWTH` and the client-side token into
-   `PADDLE_CLIENT_TOKEN` in the production vars.
+1. In the Paddle dashboard create one product, MonthMemo, with one monthly price of $4.
+2. Put the price id into `PADDLE_PRICE` and the client-side token into `PADDLE_CLIENT_TOKEN` in the production vars.
+   While `PADDLE_PRICE` is empty the billing page says subscriptions aren't open yet.
 3. Add a notification destination pointing to `https://monthmemo.spacesonlabs.com/paddle/webhook`, subscribe it to the subscription
    events, and store its secret as `PADDLE_WEBHOOK_SECRET`. Store an API key as `PADDLE_API_KEY`.
 4. Set `PADDLE_ENV = "production"` and add the domain to Paddle's approved checkout domains.

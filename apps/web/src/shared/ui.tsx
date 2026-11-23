@@ -2,11 +2,11 @@ import { AlertTriangle, Loader2 } from "lucide-react";
 import type { ReactNode } from "react";
 
 export const BUTTON_PRIMARY =
-  "inline-flex items-center justify-center gap-1.5 rounded-lg bg-brand-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-brand-700 disabled:opacity-50";
+  "inline-flex items-center justify-center gap-1.5 rounded-lg bg-brand-600 min-h-11 px-3 py-2 text-sm sm:min-h-9 font-medium text-white shadow-sm hover:bg-brand-700 disabled:opacity-50";
 export const BUTTON_SECONDARY =
-  "inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-surface px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50";
+  "inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-surface min-h-11 px-3 py-2 text-sm font-medium text-slate-700 sm:min-h-9 hover:bg-slate-50 disabled:opacity-50";
 export const BUTTON_DANGER =
-  "inline-flex items-center justify-center gap-1.5 rounded-lg bg-rose-600 px-3 py-2 text-sm font-medium text-white hover:bg-rose-700 disabled:opacity-50";
+  "inline-flex items-center justify-center gap-1.5 rounded-lg bg-rose-600 min-h-11 px-3 py-2 text-sm sm:min-h-9 font-medium text-white hover:bg-rose-700 disabled:opacity-50";
 export const INPUT =
   "mt-1 w-full rounded-lg border border-slate-300 bg-surface px-3 py-2 text-sm focus:border-brand-500 focus:outline-none";
 

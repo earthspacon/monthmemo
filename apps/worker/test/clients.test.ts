@@ -1,4 +1,4 @@
-import { PLANS } from "@monthmemo/contract";
+import { PLAN } from "@monthmemo/contract";
 import { describe, expect, it } from "vitest";
 
 import { BASIC_SCOPE, GA4_SCOPE } from "./fakes";
@@ -121,19 +121,17 @@ describe("Clients", () => {
 
   it("MM-R7 creating a client past the plan limit answers 402 plan_limit", async () => {
     const { cookie, agencyId } = await createConnectedAgency();
-    await seedClients({ agencyId, count: PLANS.starter.clientLimit });
+    await seedClients({ agencyId, count: PLAN.clientLimit - 1 });
 
-    const sixth = await api({ path: "/api/clients", method: "POST", cookie, body: clientBody() });
-    expect(sixth.status).toBe(402);
-    expect(await sixth.json()).toMatchObject({ error: "plan_limit" });
+    const last = await api({ path: "/api/clients", method: "POST", cookie, body: clientBody() });
+    expect([200, 201]).toContain(last.status);
 
-    await setAgency({ agencyId, plan: "growth", status: "active" });
-    const allowed = await api({ path: "/api/clients", method: "POST", cookie, body: clientBody() });
-    expect([200, 201]).toContain(allowed.status);
+    const overLimit = await api({ path: "/api/clients", method: "POST", cookie, body: clientBody() });
+    expect(overLimit.status).toBe(402);
+    expect(await overLimit.json()).toMatchObject({ error: "plan_limit" });
 
-    await seedClients({ agencyId, count: PLANS.growth.clientLimit - PLANS.starter.clientLimit - 1 });
-    const overGrowth = await api({ path: "/api/clients", method: "POST", cookie, body: clientBody() });
-    expect(overGrowth.status).toBe(402);
-    expect(await overGrowth.json()).toMatchObject({ error: "plan_limit" });
+    await setAgency({ agencyId, status: "active" });
+    const paidOverLimit = await api({ path: "/api/clients", method: "POST", cookie, body: clientBody() });
+    expect(paidOverLimit.status).toBe(402);
   });
 });

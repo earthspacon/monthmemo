@@ -1,29 +1,19 @@
-import { PLANS, type BillingDto, type Plan } from "@monthmemo/contract";
+import { PLAN, type BillingDto } from "@monthmemo/contract";
 
 import { createPortalSession, getPaddleEnvironment } from "../billing/paddle-api";
-import { buildPriceTable } from "../billing/prices";
+import { planPriceId } from "../billing/prices";
 import { HttpError, json, route, type Route } from "../http";
-import { clientLimitOf, getBillingRow } from "../repo/agencies";
+import { getBillingRow } from "../repo/agencies";
 import type { ApiContext } from "./context";
-
-const PLAN_ORDER: Plan[] = ["starter", "growth"];
 
 export const billingRoutes: Route<ApiContext>[] = [
   route("GET", "/api/billing", async ({ deps, agency }) => {
-    const prices = buildPriceTable(deps.env);
     const body: BillingDto = {
-      plan: agency.plan,
       status: agency.status,
       trialEndsAt: agency.trialEndsAt,
-      clientLimit: clientLimitOf(agency.plan),
-      plans: PLAN_ORDER.map((plan) => {
-        return {
-          plan,
-          priceCents: PLANS[plan].priceCents,
-          clientLimit: PLANS[plan].clientLimit,
-          paddlePriceId: prices[plan] ?? "",
-        };
-      }),
+      priceCents: PLAN.priceCents,
+      clientLimit: PLAN.clientLimit,
+      paddlePriceId: planPriceId(deps.env) ?? "",
       paddleClientToken: deps.env.PADDLE_CLIENT_TOKEN ?? "",
       paddleEnv: getPaddleEnvironment(deps.env),
     };

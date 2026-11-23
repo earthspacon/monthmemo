@@ -1,5 +1,3 @@
-import type { Plan } from "./plans";
-
 export * from "./plans";
 
 export const CLIENT_RECIPIENTS_MAX = 3;
@@ -56,7 +54,6 @@ export type ApiError = {
 
 export type AgencySummaryDto = {
   id: string;
-  plan: Plan;
   status: AgencyStatus;
   trialEndsAt: string | null;
   clientLimit: number;
@@ -141,19 +138,12 @@ export type ReportDetailDto = ReportListItemDto & {
   narrative: string | null;
 };
 
-export type BillingPlanDto = {
-  plan: Plan;
+export type BillingDto = {
+  status: AgencyStatus;
+  trialEndsAt: string | null;
   priceCents: number;
   clientLimit: number;
   paddlePriceId: string;
-};
-
-export type BillingDto = {
-  plan: Plan;
-  status: AgencyStatus;
-  trialEndsAt: string | null;
-  clientLimit: number;
-  plans: BillingPlanDto[];
   paddleClientToken: string;
   paddleEnv: string;
 };

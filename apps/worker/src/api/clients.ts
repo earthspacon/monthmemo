@@ -1,7 +1,13 @@
-import { CLIENT_RECIPIENTS_MAX, type ClientDto, type ClientInput, type GoogleSourcesDto } from "@monthmemo/contract";
+import {
+  CLIENT_RECIPIENTS_MAX,
+  PLAN,
+  type ClientDto,
+  type ClientInput,
+  type GoogleSourcesDto,
+} from "@monthmemo/contract";
 
 import { HttpError, json, readJson, route, type Route } from "../http";
-import { clientLimitOf, countClients, nextRunAfter } from "../repo/agencies";
+import { countClients, nextRunAfter } from "../repo/agencies";
 import {
   createClientRecord,
   deleteClientRecord,
@@ -112,8 +118,12 @@ export const clientRoutes: Route<ApiContext>[] = [
     requireActivePlan({ deps, agency });
     const input = readClientInput(await readJson(request));
 
-    if ((await countClients({ db: deps.db, agencyId: agency.id })) >= clientLimitOf(agency.plan)) {
-      throw new HttpError(402, "plan_limit", "Your plan's client limit is reached. Upgrade to add more clients.");
+    if ((await countClients({ db: deps.db, agencyId: agency.id })) >= PLAN.clientLimit) {
+      throw new HttpError(
+        402,
+        "plan_limit",
+        `MonthMemo covers up to ${PLAN.clientLimit} clients. Remove a client to add another.`,
+      );
     }
     const sources = checkSources({ input, sources: await loadGoogleSources(context) });
     const id = await createClientRecord({ db: deps.db, agencyId: agency.id, input, sources, now: deps.now() });

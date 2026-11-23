@@ -1,4 +1,4 @@
-import { PLANS, type ClientDto, type GoogleSourcesDto } from "@monthmemo/contract";
+import { type ClientDto, type GoogleSourcesDto } from "@monthmemo/contract";
 import { combine, createEffect, createEvent, createStore, sample } from "effector";
 import { createGate } from "effector-react";
 
@@ -75,7 +75,6 @@ export const $limit = combine($me, clients.$data, (me, list) => {
     count: list.length,
     atLimit: me !== null && list.length >= limit,
     overLimit: me !== null && list.length > limit,
-    canUpgrade: me !== null && me.agency.clientLimit < PLANS.growth.clientLimit,
   };
 });
 

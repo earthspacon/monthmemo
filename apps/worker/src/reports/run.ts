@@ -1,4 +1,4 @@
-import { PLANS } from "@monthmemo/contract";
+import { PLAN } from "@monthmemo/contract";
 
 import type { Deps } from "../deps";
 import { insertPendingReports, listClientsWithinLimit, listRunnableAgencies } from "../repo/reports";
@@ -30,7 +30,7 @@ export async function runMonthlyReports({ deps, scheduledTime }: { deps: Deps; s
     const clients = await listClientsWithinLimit({
       db: deps.db,
       agencyId: agency.id,
-      limit: PLANS[agency.plan].clientLimit,
+      limit: PLAN.clientLimit,
     });
     await insertPendingReports({
       db: deps.db,

@@ -1,7 +1,7 @@
-import type { MeDto } from "@monthmemo/contract";
+import { PLAN, type MeDto } from "@monthmemo/contract";
 
 import { json, route, type Route } from "../http";
-import { clientLimitOf, countClients } from "../repo/agencies";
+import { countClients } from "../repo/agencies";
 import type { ApiContext } from "./context";
 
 export const meRoutes: Route<ApiContext>[] = [
@@ -10,10 +10,9 @@ export const meRoutes: Route<ApiContext>[] = [
       email: user.email,
       agency: {
         id: agency.id,
-        plan: agency.plan,
         status: agency.status,
         trialEndsAt: agency.trialEndsAt,
-        clientLimit: clientLimitOf(agency.plan),
+        clientLimit: PLAN.clientLimit,
         clientCount: await countClients({ db: deps.db, agencyId: agency.id }),
       },
     };

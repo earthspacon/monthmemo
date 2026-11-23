@@ -3,13 +3,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
-import {
-  PADDLE_TEST_CLIENT_TOKEN,
-  PADDLE_TEST_PRICE_GROWTH,
-  PADDLE_TEST_PRICE_STARTER,
-  PADDLE_TEST_SECRET,
-  TURNSTILE_TEST_SECRET,
-} from "./config";
+import { PADDLE_TEST_CLIENT_TOKEN, PADDLE_TEST_PRICE, PADDLE_TEST_SECRET, TURNSTILE_TEST_SECRET } from "./config";
 
 export const WORKER_DIR = path.resolve(import.meta.dirname, "../../worker");
 const READY_TIMEOUT_MS = 90_000;
@@ -47,8 +41,7 @@ export async function startWorker({
     GOOGLE_CLIENT_SECRET: "e2e-google-client-secret",
     PADDLE_WEBHOOK_SECRET: PADDLE_TEST_SECRET,
     PADDLE_CLIENT_TOKEN: PADDLE_TEST_CLIENT_TOKEN,
-    PADDLE_PRICE_STARTER: PADDLE_TEST_PRICE_STARTER,
-    PADDLE_PRICE_GROWTH: PADDLE_TEST_PRICE_GROWTH,
+    PADDLE_PRICE: PADDLE_TEST_PRICE,
     TURNSTILE_SECRET_KEY: TURNSTILE_TEST_SECRET,
     ...vars,
   };

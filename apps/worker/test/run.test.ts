@@ -1,4 +1,4 @@
-import { PLANS } from "@monthmemo/contract";
+import { PLAN } from "@monthmemo/contract";
 import { env } from "cloudflare:test";
 import { beforeEach, describe, expect, it } from "vitest";
 
@@ -44,7 +44,7 @@ describe("Monthly run", () => {
 
   it("MM-R13 the monthly cron creates one pending report per active client and none on a second run", async () => {
     const trialing = await seedAgency({ status: "trialing" });
-    const active = await seedAgency({ status: "active", plan: "growth" });
+    const active = await seedAgency({ status: "active" });
     const clientIds = [
       (await seedClient({ agencyId: trialing.agencyId, name: "Example Bakery" })).clientId,
       (await seedClient({ agencyId: trialing.agencyId, name: "Northside Dental" })).clientId,
@@ -66,7 +66,7 @@ describe("Monthly run", () => {
   });
 
   it("MM-R13 the minute trigger starts the monthly run only at the top of an hour on the 4th from 06:00 UTC", async () => {
-    const { agencyId } = await seedAgency({ status: "active", plan: "growth" });
+    const { agencyId } = await seedAgency({ status: "active" });
     const { clientId } = await seedClient({ agencyId });
     const runAt = monthlyRunOf(new Date());
     const tooEarly = [
@@ -91,12 +91,12 @@ describe("Monthly run", () => {
       const agency = await seedAgency({ status });
       inactiveClients.push((await seedClient({ agencyId: agency.agencyId })).clientId);
     }
-    const downgraded = await seedAgency({ status: "active", plan: "starter" });
+    const full = await seedAgency({ status: "active" });
     const overLimit: string[] = [];
     const start = Date.parse("2026-01-01T00:00:00Z");
-    for (let index = 0; index < PLANS.starter.clientLimit + 2; index += 1) {
+    for (let index = 0; index < PLAN.clientLimit + 2; index += 1) {
       const { clientId } = await seedClient({
-        agencyId: downgraded.agencyId,
+        agencyId: full.agencyId,
         name: `Client ${index + 1}`,
         createdAt: new Date(start + index * MINUTE_MS).toISOString(),
       });
@@ -107,7 +107,7 @@ describe("Monthly run", () => {
 
     expect(await reportsOf(inactiveClients)).toEqual([]);
     const built = await reportsOf(overLimit);
-    expect(new Set(built.map((row) => row.client_id))).toEqual(new Set(overLimit.slice(0, PLANS.starter.clientLimit)));
+    expect(new Set(built.map((row) => row.client_id))).toEqual(new Set(overLimit.slice(0, PLAN.clientLimit)));
   });
 
   it("MM-R17 a revoked token fails that agency's reports, other agencies continue, one email per agency", async () => {

@@ -1,4 +1,4 @@
-import type { BillingDto, Plan } from "@monthmemo/contract";
+import type { BillingDto } from "@monthmemo/contract";
 import { attach, createEffect, createEvent, createStore, sample } from "effector";
 import { createGate } from "effector-react";
 
@@ -11,7 +11,7 @@ import { loadPaddle, openPaddleCheckout } from "./paddle";
 const CHECKOUT_COMPLETED = "checkout.completed";
 
 export const BillingGate = createGate();
-export const choosePlanClicked = createEvent<Plan>();
+export const subscribeClicked = createEvent();
 export const manageBillingClicked = createEvent();
 export const billingRequested = createEvent();
 const paddleEventReceived = createEvent<string>();
@@ -27,15 +27,12 @@ export const $checkoutError = createStore("");
 
 const openCheckoutFx = attach({
   source: { data: billing.$data, me: $me },
-  effect: async ({ data, me }, plan: Plan) => {
-    const option = data?.plans.find((entry) => {
-      return entry.plan === plan;
-    });
-    if (!data || !me || !option?.paddlePriceId) {
-      throw new Error("This plan isn't on sale yet");
+  effect: async ({ data, me }) => {
+    if (!data || !me || !data.paddlePriceId) {
+      throw new Error("Subscriptions aren't open yet. Your free month keeps running in the meantime.");
     }
     const paddle = await loadPaddle({ billing: data, onEvent: (name) => paddleEventReceived(name) });
-    openPaddleCheckout({ paddle, priceId: option.paddlePriceId, email: me.email, agencyId: me.agency.id });
+    openPaddleCheckout({ paddle, priceId: data.paddlePriceId, email: me.email, agencyId: me.agency.id });
   },
 });
 
@@ -53,7 +50,7 @@ sample({
 });
 
 sample({
-  clock: choosePlanClicked,
+  clock: subscribeClicked,
   target: openCheckoutFx,
 });
 
@@ -70,7 +67,7 @@ sample({
 });
 
 sample({
-  clock: choosePlanClicked,
+  clock: subscribeClicked,
   target: $checkoutError.reinit,
 });
 

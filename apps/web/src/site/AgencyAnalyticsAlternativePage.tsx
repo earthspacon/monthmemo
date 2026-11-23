@@ -1,4 +1,4 @@
-import { PLANS } from "@monthmemo/contract";
+import { PLAN } from "@monthmemo/contract";
 import { Link } from "react-router-dom";
 
 import { BUTTON_PRIMARY } from "../shared/ui";
@@ -7,10 +7,9 @@ import {
   COMPETITOR_CHECKED,
   COMPETITOR_PER_CLIENT_RANGE,
   COMPETITOR_SOURCES,
-  GROWTH_PRICE,
-  PER_CLIENT_RANGE,
+  PER_CLIENT_PRICE,
+  PLAN_PRICE,
   START_CTA,
-  STARTER_PRICE,
 } from "./config";
 import { SiteLayout } from "./SiteLayout";
 
@@ -30,9 +29,9 @@ export const AgencyAnalyticsAlternativePage = () => {
         <section className="space-y-3">
           <h2 className="text-xl font-semibold">Cost per client</h2>
           <p className="text-slate-700">
-            MonthMemo is {STARTER_PRICE} a month for {PLANS.starter.clientLimit} clients or {GROWTH_PRICE} a month for{" "}
-            {PLANS.growth.clientLimit}. That works out to {PER_CLIENT_RANGE} per client, against AgencyAnalytics'{" "}
-            {COMPETITOR_PER_CLIENT_RANGE} per client.
+            MonthMemo is {PLAN_PRICE} a month for up to {PLAN.clientLimit} clients. With all {PLAN.clientLimit} that
+            works out to {PER_CLIENT_PRICE} per client, against AgencyAnalytics' {COMPETITOR_PER_CLIENT_RANGE} per
+            client.
           </p>
           <p className="text-sm text-slate-600">
             AgencyAnalytics lists $20 per client a month billed yearly and $25 billed monthly. Prices checked{" "}

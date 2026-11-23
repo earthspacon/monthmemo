@@ -1,4 +1,4 @@
-import { PLANS } from "@monthmemo/contract";
+import { PLAN } from "@monthmemo/contract";
 import { afterAll, afterEach, expect, it } from "vitest";
 
 import {
@@ -23,7 +23,7 @@ import {
   unsubscribe,
 } from "./helpers";
 
-const STARTER_CLIENT_LIMIT = PLANS.starter.clientLimit;
+const CLIENT_LIMIT = PLAN.clientLimit;
 const ADD_CLIENT = "Add client";
 const GA4_PICKER = "Google Analytics property";
 const GSC_PICKER = "Search Console site";
@@ -150,17 +150,19 @@ it("MM-R37.i saving a valid client adds the row and shows Client added", async (
   expect(await listClients({ context })).toHaveLength(1);
 });
 
-it("MM-R37.j at the plan limit Add client is disabled with an upgrade link", async () => {
+it("MM-R37.j at the plan limit Add client is disabled and the page says to remove one", async () => {
   const { context, page } = await openPage();
   await seedConnectedAgency({ context });
-  for (let index = 0; index < STARTER_CLIENT_LIMIT; index += 1) {
+  for (let index = 0; index < CLIENT_LIMIT; index += 1) {
     await createClient({ context });
   }
   await page.goto("/app/clients");
 
   await page.getByRole("button", { name: ADD_CLIENT, disabled: true }).waitFor();
-  const upgrade = page.getByRole("link", { name: "Upgrade to Growth for 30 clients" });
-  expect(await upgrade.getAttribute("href")).toBe("/app/billing");
+  await page
+    .getByText(`You're using all ${CLIENT_LIMIT} clients on your plan. Remove a client to add another.`)
+    .waitFor();
+  expect(await page.getByRole("link", { name: /Upgrade/ }).count()).toBe(0);
 });
 
 it("MM-R37.k deleting a client asks first; cancel keeps it, confirm removes it", async () => {
