@@ -31,19 +31,11 @@ it("the app header at 390 is one row with the logo, and every nav item stays rea
     await page.getByRole("heading", { level: 1 }).waitFor();
     const header = page.locator("header").first();
 
-    expect(await heightOf(header), path).toBeLessThanOrEqual(
-      APP_HEADER_MAX_HEIGHT,
-    );
+    expect(await heightOf(header), path).toBeLessThanOrEqual(APP_HEADER_MAX_HEIGHT);
     expect(await controlRows(header), path).toHaveLength(1);
-    expect(
-      await header.getByRole("link", { name: "MonthMemo" }).isVisible(),
-      path,
-    ).toBe(true);
+    expect(await header.getByRole("link", { name: "MonthMemo" }).isVisible(), path).toBe(true);
     for (const label of APP_NAV) {
-      expect(
-        await page.getByRole("link", { name: label, exact: true }).isVisible(),
-        `${path} ${label}`,
-      ).toBe(true);
+      expect(await page.getByRole("link", { name: label, exact: true }).isVisible(), `${path} ${label}`).toBe(true);
     }
   }
 });
@@ -57,10 +49,7 @@ it("the app header at 1440 shows the whole nav in one row", async () => {
 
   expect(await controlRows(header)).toHaveLength(1);
   for (const label of APP_NAV) {
-    expect(
-      await header.getByRole("link", { name: label, exact: true }).isVisible(),
-      label,
-    ).toBe(true);
+    expect(await header.getByRole("link", { name: label, exact: true }).isVisible(), label).toBe(true);
   }
 });
 
@@ -83,9 +72,7 @@ it("the Add client button stays on one line next to the title at 390", async () 
   const button = page.getByRole("button", { name: "Add client" });
   await button.waitFor();
 
-  expect(await heightOf(button)).toBeLessThanOrEqual(
-    ONE_LINE_BUTTON_MAX_HEIGHT,
-  );
+  expect(await heightOf(button)).toBeLessThanOrEqual(ONE_LINE_BUTTON_MAX_HEIGHT);
 });
 
 it("the landing, reports list and a report open without console errors", async () => {
@@ -93,11 +80,7 @@ it("the landing, reports list and a report open without console errors", async (
   const errors = collectConsoleErrors(page);
   await seedConnectedAgency({ context });
   const client = await createClient({ context, name: "Example Bakery" });
-  const report = await seedReport({
-    context,
-    clientId: client.id,
-    status: "draft",
-  });
+  const report = await seedReport({ context, clientId: client.id, status: "draft" });
 
   await page.goto("/");
   await page.getByRole("heading", { level: 1 }).waitFor();
@@ -109,23 +92,24 @@ it("the landing, reports list and a report open without console errors", async (
   expect(errors).toEqual([]);
 });
 
-async function expectOneLineSiteHeader({
-  page,
-  path,
-}: {
-  page: Page;
-  path: string;
-}) {
+it("an unknown app page shows the app's not-found view with a link back to Reports", async () => {
+  const { context, page } = await openPage({ viewport: MOBILE });
+  await seedConnectedAgency({ context });
+  await page.goto("/app/nope");
+
+  await page.getByRole("heading", { name: "Page not found" }).waitFor();
+  await page.getByRole("main").getByRole("link", { name: "Back to reports" }).click();
+  await page.waitForURL("**/app/reports");
+  expect(await page.getByText("Not built yet").count()).toBe(0);
+});
+
+async function expectOneLineSiteHeader({ page, path }: { page: Page; path: string }) {
   const header = page.locator("header").first();
   const cta = header.getByRole("link", { name: "Start free month" });
   await cta.waitFor();
 
-  expect(await heightOf(header), path).toBeLessThanOrEqual(
-    SITE_HEADER_MAX_HEIGHT,
-  );
-  expect(await heightOf(cta), path).toBeLessThanOrEqual(
-    ONE_LINE_BUTTON_MAX_HEIGHT,
-  );
+  expect(await heightOf(header), path).toBeLessThanOrEqual(SITE_HEADER_MAX_HEIGHT);
+  expect(await heightOf(cta), path).toBeLessThanOrEqual(ONE_LINE_BUTTON_MAX_HEIGHT);
   expect(await controlRows(header), path).toHaveLength(1);
 }
 
@@ -139,7 +123,6 @@ async function heightOf(locator: Locator) {
 }
 
 // Distinct rows (by vertical centre) of the visible links and buttons; one entry means one row.
-
 async function controlRows(container: Locator) {
   const centres = await container.evaluate((element) => {
     return Array.from(element.querySelectorAll("a, button"))

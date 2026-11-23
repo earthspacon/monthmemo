@@ -1,4 +1,4 @@
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Link, Navigate, Route, Routes } from "react-router-dom";
 
 import { BillingPage } from "../pages/BillingPage";
 import { BrandPage } from "../pages/BrandPage";
@@ -7,7 +7,7 @@ import { ConnectPage } from "../pages/ConnectPage";
 import { ReportPage } from "../pages/ReportPage";
 import { ReportsPage } from "../pages/ReportsPage";
 import { SignInPage } from "../pages/SignInPage";
-import { Card } from "../shared/ui";
+import { BUTTON_PRIMARY, Card } from "../shared/ui";
 import { AgencyAnalyticsAlternativePage } from "../site/AgencyAnalyticsAlternativePage";
 import { AutomateReportsPage } from "../site/AutomateReportsPage";
 import { LandingPage } from "../site/LandingPage";
@@ -17,10 +17,6 @@ import { PricingPage } from "../site/PricingPage";
 import { ReportSummaryToolPage } from "../tools/ReportSummaryToolPage";
 import { AppShell, RequireSession } from "./AppShell";
 import { ToastView } from "./ToastView";
-
-const NotBuiltYet = () => {
-  return <Card className="p-8 text-center text-sm text-slate-600">Not built yet</Card>;
-};
 
 export const App = () => {
   return (
@@ -54,12 +50,24 @@ export const AppRoutes = () => {
             <Route path="billing" element={<BillingPage />} />
             <Route path="reports" element={<ReportsPage />} />
             <Route path="reports/:id" element={<ReportPage />} />
-            <Route path="*" element={<NotBuiltYet />} />
+            <Route path="*" element={<AppNotFound />} />
           </Route>
         </Route>
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
       <ToastView />
     </>
+  );
+};
+
+const AppNotFound = () => {
+  return (
+    <Card className="space-y-4 p-8 text-center">
+      <h1 className="text-2xl font-semibold tracking-tight">Page not found</h1>
+      <p className="text-sm text-slate-600">This page doesn't exist in MonthMemo.</p>
+      <Link to="/app/reports" className={BUTTON_PRIMARY}>
+        Back to reports
+      </Link>
+    </Card>
   );
 };
