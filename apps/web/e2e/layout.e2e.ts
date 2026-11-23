@@ -4,10 +4,12 @@ import type { Locator, Page } from "playwright";
 import {
   closeBrowser,
   closePages,
+  createClient,
   DESKTOP,
   MOBILE,
   openPage,
   seedConnectedAgency,
+  seedReport,
 } from "./helpers";
 
 const APP_HEADER_MAX_HEIGHT = 56;
@@ -86,6 +88,27 @@ it("the Add client button stays on one line next to the title at 390", async () 
   );
 });
 
+it("the landing, reports list and a report open without console errors", async () => {
+  const { context, page } = await openPage();
+  const errors = collectConsoleErrors(page);
+  await seedConnectedAgency({ context });
+  const client = await createClient({ context, name: "Example Bakery" });
+  const report = await seedReport({
+    context,
+    clientId: client.id,
+    status: "draft",
+  });
+
+  await page.goto("/");
+  await page.getByRole("heading", { level: 1 }).waitFor();
+  await page.goto("/app/reports");
+  await page.getByRole("link", { name: /Example Bakery/ }).waitFor();
+  await page.goto(`/app/reports/${report.id}`);
+  await page.getByRole("button", { name: "Approve" }).waitFor();
+
+  expect(errors).toEqual([]);
+});
+
 async function expectOneLineSiteHeader({
   page,
   path,
@@ -136,4 +159,18 @@ async function controlRows(container: Locator) {
     });
     return sameRow ? rows : [...rows, centre];
   }, []);
+}
+
+function collectConsoleErrors(page: Page) {
+  const errors: string[] = [];
+
+  page.on("console", (message) => {
+    if (message.type() === "error") {
+      errors.push(message.text());
+    }
+  });
+  page.on("pageerror", (error) => {
+    errors.push(error.message);
+  });
+  return errors;
 }
