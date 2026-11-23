@@ -31,13 +31,17 @@ const PlanNotice = () => {
 };
 
 const PreviewFrame = ({ reportId }: { reportId: string }) => {
+  // The email stays white in dark mode too; the label says why the panel looks different.
   return (
-    <iframe
-      title="Report preview"
-      src={`/api/reports/${reportId}/preview`}
-      sandbox=""
-      className="h-[600px] w-full max-w-full rounded-xl border border-slate-200 bg-white"
-    />
+    <figure className="space-y-1.5">
+      <figcaption className="text-xs font-medium text-slate-500">Email preview</figcaption>
+      <iframe
+        title="Report preview"
+        src={`/api/reports/${reportId}/preview`}
+        sandbox=""
+        className="h-[600px] w-full max-w-full rounded-xl border border-slate-200 bg-white"
+      />
+    </figure>
   );
 };
 

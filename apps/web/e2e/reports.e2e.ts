@@ -6,6 +6,7 @@ import {
   countVisibleTables,
   createClient,
   delayApi,
+  DESKTOP,
   expectNoHorizontalScroll,
   failApi,
   GENERIC_ERROR,
@@ -23,6 +24,9 @@ import {
   sentDayLabel,
   shiftPeriod,
 } from "./helpers";
+
+// The label sits right on top of the panel, not somewhere above the page header.
+const PREVIEW_LABEL_MAX_GAP = 16;
 
 afterEach(closePages);
 afterAll(closeBrowser);
@@ -203,7 +207,10 @@ it("MM-R39.l on an inactive plan Approve is disabled with a link to billing", as
   await page.goto(`/app/reports/${report.id}`);
 
   await page.getByRole("button", { name: "Approve", disabled: true }).waitFor();
-  const billing = page.getByRole("main").getByRole("link", { name: /billing|plan/i }).first();
+  const billing = page
+    .getByRole("main")
+    .getByRole("link", { name: /billing|plan/i })
+    .first();
   expect(await billing.getAttribute("href")).toBe("/app/billing");
 });
 
@@ -223,4 +230,24 @@ it("MM-R39.m reports are stacked cards on a 390 px phone and the preview fits th
   expect(box).not.toBeNull();
   expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(MOBILE.width);
   await expectNoHorizontalScroll(page);
+});
+
+it("MM-R39.n the white draft preview is labelled Email preview right above it at 390 and 1440", async () => {
+  for (const viewport of [MOBILE, DESKTOP]) {
+    const { context, page } = await openPage({ viewport });
+    await seedConnectedAgency({ context });
+    const client = await createClient({ context, name: "Example Bakery" });
+    const report = await seedReport({ context, clientId: client.id, status: "draft" });
+    const brand = await readBrand({ context });
+    await page.goto(`/app/reports/${report.id}`);
+    await page.frameLocator("iframe").getByText(brand.displayName).first().waitFor();
+
+    const label = await page.getByText("Email preview", { exact: true }).boundingBox();
+    const frame = await page.locator("iframe").boundingBox();
+    expect(label, `${viewport.width}`).not.toBeNull();
+    expect(frame, `${viewport.width}`).not.toBeNull();
+    const gap = (frame?.y ?? 0) - ((label?.y ?? 0) + (label?.height ?? 0));
+    expect(gap, `${viewport.width}`).toBeGreaterThanOrEqual(0);
+    expect(gap, `${viewport.width}`).toBeLessThanOrEqual(PREVIEW_LABEL_MAX_GAP);
+  }
 });
