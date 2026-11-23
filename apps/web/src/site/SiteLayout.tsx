@@ -6,9 +6,9 @@ import { BUTTON_PRIMARY } from "../shared/ui";
 import { FOOTER_LINKS, PRODUCT_NAME, SELLER_BRAND, START_CTA, SUPPORT_EMAIL } from "./config";
 import { findSeoPage } from "./seo";
 
-export const SiteLogo = () => {
+export const SiteLogo = ({ to }: { to: string }) => {
   return (
-    <Link to="/" className="flex items-center gap-2">
+    <Link to={to} className="flex shrink-0 items-center gap-2">
       <span className="flex size-8 items-center justify-center rounded-lg bg-brand-600 text-sm font-bold text-white">
         M
       </span>
@@ -32,7 +32,7 @@ export const SiteLayout = ({ children }: { children: ReactNode }) => {
     <div className="flex min-h-screen flex-col">
       <header className="border-b border-slate-200 bg-surface">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3">
-          <SiteLogo />
+          <SiteLogo to="/" />
           <nav className="flex items-center gap-4 text-sm">
             <Link to="/pricing" className="text-slate-600 hover:text-slate-900">
               Pricing
