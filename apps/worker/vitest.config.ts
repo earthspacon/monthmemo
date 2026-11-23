@@ -32,6 +32,8 @@ export default defineConfig(async () => {
     ],
     test: {
       setupFiles: ["./test/setup.ts"],
+      // Monthly-run tests take ~5 s when the box is busy; the 5 s default made them flaky.
+      testTimeout: 15_000,
     },
   };
 });
