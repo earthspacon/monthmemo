@@ -1,8 +1,9 @@
 import { env, SELF } from "cloudflare:test";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { consumeRateLimit } from "../src/repo/shield";
 import { TURNSTILE_TEST_TOKEN } from "./fakes";
-import { api, BASE, fetchWithEnv, randomToken, startSignIn, uniqueIp } from "./helpers";
+import { api, BASE, db, fetchWithEnv, randomToken, startSignIn, uniqueIp } from "./helpers";
 
 const AUTH_LIMIT_PER_MINUTE = 30;
 const UNSUBSCRIBE_FLOOD = 61;
@@ -144,6 +145,17 @@ describe("Abuse limits", () => {
     expect(statuses[0]).toBe(404);
     expect(statuses).toContain(429);
     expect(statuses[statuses.length - 1]).toBe(429);
+  });
+
+  it("MM-R27 parallel hits on one rate-limit key never pass more than the limit", async () => {
+    const key = `parallel:${uniqueIp()}`;
+    const now = new Date();
+
+    const results = await Promise.all(
+      Array.from({ length: 5 }, () => consumeRateLimit({ db, key, limit: 3, windowMs: 60_000, now })),
+    );
+
+    expect(results.filter(Boolean)).toHaveLength(3);
   });
 
   it("MM-R27 sign-in fails closed without a Turnstile secret", async () => {
