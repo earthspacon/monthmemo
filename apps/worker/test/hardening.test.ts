@@ -28,6 +28,8 @@ function expectSecurityHeaders(response: Response) {
   expect(csp).toContain("script-src 'self'");
   expect(csp).toContain("https://challenges.cloudflare.com");
   expect(csp).toContain("paddle.com");
+  expect(csp).toContain("script-src 'self' https://challenges.cloudflare.com https://cdn.paddle.com https://static.cloudflareinsights.com");
+  expect(csp).toContain("https://cloudflareinsights.com");
   expect(csp).toContain("frame-ancestors 'none'");
   expect(response.headers.get("strict-transport-security")).toMatch(/max-age=\d+/);
   expect(response.headers.get("x-content-type-options")).toBe("nosniff");

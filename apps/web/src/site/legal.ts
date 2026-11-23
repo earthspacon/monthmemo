@@ -72,6 +72,7 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
           "Aggregate metrics: monthly totals and top rows such as sessions, clicks and top pages. We do not store raw visitor-level data.",
           "The narrative: the text written for each report and the status of each send.",
           "Google sign-in tokens, encrypted before they are stored.",
+          "We count page views on this site with Cloudflare Web Analytics, which sets no cookies and collects no personal data.",
         ],
       },
       {

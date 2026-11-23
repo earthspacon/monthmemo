@@ -8,7 +8,9 @@ const DIST = path.join(WEB_DIR, "dist");
 const ENTRY = path.join(WEB_DIR, "dist-prerender", "entry.js");
 
 const { buildPrerenderedFiles } = await import(pathToFileURL(ENTRY).href);
-const files = buildPrerenderedFiles(readFileSync(path.join(DIST, "index.html"), "utf8"));
+const files = buildPrerenderedFiles(readFileSync(path.join(DIST, "index.html"), "utf8"), {
+  beaconToken: process.env.VITE_CF_BEACON_TOKEN,
+});
 
 for (const { file, content } of files) {
   const target = path.join(DIST, file);

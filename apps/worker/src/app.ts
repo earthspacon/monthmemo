@@ -47,11 +47,11 @@ const NOT_FOUND_ASSET = "/404";
 
 const APP_CSP = [
   "default-src 'self'",
-  "script-src 'self' https://challenges.cloudflare.com https://cdn.paddle.com",
+  "script-src 'self' https://challenges.cloudflare.com https://cdn.paddle.com https://static.cloudflareinsights.com",
   "style-src 'self' 'unsafe-inline' https://cdn.paddle.com",
   "img-src 'self' data: https:",
   "font-src 'self' data:",
-  "connect-src 'self' https://challenges.cloudflare.com https://*.paddle.com",
+  "connect-src 'self' https://challenges.cloudflare.com https://*.paddle.com https://cloudflareinsights.com",
   "frame-src 'self' https://challenges.cloudflare.com https://*.paddle.com",
   "frame-ancestors 'none'",
   "base-uri 'self'",
