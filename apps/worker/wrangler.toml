@@ -81,7 +81,7 @@ GOOGLE_FAKE = "0"
 PADDLE_ENV = "production"
 PADDLE_CLIENT_TOKEN = "live_8edb94e3115e1b6c2b4cf296d04"
 # The $4 monthly price is not provisioned in Paddle yet; checkout stays closed until its id is filled in.
-PADDLE_PRICE = ""
+PADDLE_PRICE = "pri_01m84q7yr1mdzeccrgxa6rc5cd"
 LLM_DAILY_USD_CAP = "5"
 LLM_AGENCY_DAILY_USD_CAP = "0.10"
 OWNER_ALERT_EMAIL = "alerts@spacesonlabs.com"
