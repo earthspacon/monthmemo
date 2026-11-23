@@ -51,8 +51,9 @@ export const $reportStatus = report.$status;
 export const $reportError = report.$error;
 export const $approving = approveFx.pending;
 export const $skipping = skipFx.pending;
-export const $reportId = ReportGate.state.map(({ id }) => {
-  return id;
+// The gate state is {} until the page opens.
+export const $reportId = ReportGate.state.map(({ id }): string | null => {
+  return id ?? null;
 });
 
 // An expired or unpaid plan keeps the drafts but blocks approving them until billing is fixed.
