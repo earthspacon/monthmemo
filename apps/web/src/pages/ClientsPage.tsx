@@ -158,7 +158,12 @@ const AddClientButton = () => {
   const { limit, add } = useUnit({ limit: $limit, add: addClicked });
 
   return (
-    <button type="button" className={BUTTON_PRIMARY} disabled={limit.atLimit} onClick={() => add()}>
+    <button
+      type="button"
+      className={`${BUTTON_PRIMARY} shrink-0 whitespace-nowrap`}
+      disabled={limit.atLimit}
+      onClick={() => add()}
+    >
       Add client
     </button>
   );

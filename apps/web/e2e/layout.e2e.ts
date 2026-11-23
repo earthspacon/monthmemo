@@ -74,6 +74,18 @@ it("the public header CTA stays on one line at 390", async () => {
   await expectOneLineSiteHeader({ page, path: "/pricing" });
 });
 
+it("the Add client button stays on one line next to the title at 390", async () => {
+  const { context, page } = await openPage({ viewport: MOBILE });
+  await seedConnectedAgency({ context });
+  await page.goto("/app/clients");
+  const button = page.getByRole("button", { name: "Add client" });
+  await button.waitFor();
+
+  expect(await heightOf(button)).toBeLessThanOrEqual(
+    ONE_LINE_BUTTON_MAX_HEIGHT,
+  );
+});
+
 async function expectOneLineSiteHeader({
   page,
   path,
