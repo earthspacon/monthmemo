@@ -34,14 +34,14 @@ export const SiteLayout = ({ children }: { children: ReactNode }) => {
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3">
           <SiteLogo to="/" />
           <nav className="flex items-center gap-4 text-sm">
-            <Link to="/pricing" className="text-slate-600 hover:text-slate-900">
+            <Link to="/pricing" className="text-slate-600 hover:text-slate-900 max-sm:hidden">
               Pricing
             </Link>
             <Link to="/sign-in" className="text-slate-600 hover:text-slate-900 max-sm:hidden">
               Sign in
             </Link>
             <ThemeToggle />
-            <Link to="/sign-in" className={BUTTON_PRIMARY}>
+            <Link to="/sign-in" className={`${BUTTON_PRIMARY} whitespace-nowrap`}>
               {START_CTA}
             </Link>
           </nav>
