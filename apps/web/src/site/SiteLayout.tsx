@@ -9,7 +9,7 @@ import { HeaderEntry } from "./SessionLinks";
 
 export const SiteLogo = ({ to }: { to: string }) => {
   return (
-    <Link to={to} className="flex shrink-0 items-center gap-2">
+    <Link to={to} className="flex min-h-11 shrink-0 items-center gap-2">
       <span className="flex size-8 items-center justify-center rounded-lg bg-brand-600 text-sm font-bold text-white">
         M
       </span>
@@ -49,16 +49,20 @@ export const SiteLayout = ({ children }: { children: ReactNode }) => {
           </nav>
         </div>
       </header>
-      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-10">{children}</main>
+      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 sm:py-10">{children}</main>
       <footer className="border-t border-slate-200 bg-surface">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-6 text-sm text-slate-500">
           <span>
             © {SELLER_BRAND} · {SUPPORT_EMAIL}
           </span>
-          <nav className="flex flex-wrap items-center gap-4">
+          <nav className="flex flex-wrap items-center gap-x-4 sm:gap-y-4">
             {FOOTER_LINKS.map((link) => {
               return (
-                <Link key={link.to} to={link.to} className="hover:text-slate-900">
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  className="inline-flex min-h-11 items-center hover:text-slate-900 sm:min-h-0"
+                >
                   {link.label}
                 </Link>
               );

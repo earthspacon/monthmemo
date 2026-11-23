@@ -45,7 +45,7 @@ export const LandingPage = () => {
     <SiteLayout>
       <div className="space-y-16">
         <div className="mx-auto max-w-3xl space-y-4 text-center">
-          <h1 className="text-4xl font-semibold tracking-tight">{HERO.title}</h1>
+          <h1 className="text-3xl font-semibold sm:text-4xl tracking-tight">{HERO.title}</h1>
           <p className="text-lg text-slate-700">{HERO.subtitle}</p>
           <p className="text-slate-600">{HERO.detail}</p>
           <div className="flex flex-wrap justify-center gap-3">
