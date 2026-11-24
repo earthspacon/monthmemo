@@ -81,9 +81,9 @@ DEV_ROUTES = "0"
 GOOGLE_FAKE = "0"
 PADDLE_ENV = "production"
 PADDLE_CLIENT_TOKEN = "live_8edb94e3115e1b6c2b4cf296d04"
-# The $4 monthly price is not provisioned in Paddle yet; checkout stays closed until its id is filled in.
+# The $4/month and $40/year Paddle prices. An empty id keeps that checkout closed.
 PADDLE_PRICE = "pri_01m84q7yr1mdzeccrgxa6rc5cd"
-PADDLE_PRICE_YEARLY = ""
+PADDLE_PRICE_YEARLY = "pri_01m861ws8edtf1mzhhdw7w94rd"
 LLM_DAILY_USD_CAP = "5"
 LLM_AGENCY_DAILY_USD_CAP = "0.10"
 OWNER_ALERT_EMAIL = "alerts@spacesonlabs.com"
