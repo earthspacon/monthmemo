@@ -1,11 +1,12 @@
 import { mkdirSync } from "node:fs";
+import { tmpdir } from "node:os";
 import path from "node:path";
 
 import { afterAll, describe, expect, it } from "vitest";
 
 import { closeBrowser, closePages, DESKTOP, MOBILE, openPage } from "./helpers";
 
-const SHOTS_DIR = path.resolve(import.meta.dirname, "../../../.agents/reports/shots");
+const SHOTS_DIR = process.env.SHOTS_DIR ?? path.join(tmpdir(), "monthmemo-shots");
 const SETTLE_MS = 1500;
 const PAGES = [
   { name: "landing", route: "/" },
