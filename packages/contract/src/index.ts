@@ -142,8 +142,10 @@ export type BillingDto = {
   status: AgencyStatus;
   trialEndsAt: string | null;
   priceCents: number;
+  yearlyPriceCents: number;
   clientLimit: number;
   paddlePriceId: string;
+  paddleYearlyPriceId: string;
   paddleClientToken: string;
   paddleEnv: string;
 };

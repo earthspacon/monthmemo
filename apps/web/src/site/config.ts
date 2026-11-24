@@ -1,4 +1,4 @@
-import { PLAN, TRIAL_DAYS } from "@monthmemo/contract";
+import { type BillingPeriod, PLAN, TRIAL_DAYS } from "@monthmemo/contract";
 
 // Every public page reads the seller name and contact from this file only.
 export const SELLER_LEGAL_NAME = "Spaceson Labs";
@@ -20,7 +20,13 @@ export function formatDollars(cents: number) {
 }
 
 export const PLAN_PRICE = formatDollars(PLAN.priceCents);
-export const PLAN_PRICE_LINE = "/ month · cancel anytime";
+export const PLAN_YEARLY_PRICE = formatDollars(PLAN.yearlyPriceCents);
+export const BILLING_PERIODS: BillingPeriod[] = ["monthly", "yearly"];
+export const PERIOD_LABELS: Record<BillingPeriod, string> = { monthly: "Monthly", yearly: "Yearly" };
+export const PLAN_PRICES: Record<BillingPeriod, { price: string; line: string }> = {
+  monthly: { price: PLAN_PRICE, line: "/ month · cancel anytime" },
+  yearly: { price: PLAN_YEARLY_PRICE, line: "/ year · 2 months free" },
+};
 export const PLAN_FEATURES = [
   `Up to ${PLAN.clientLimit} clients`,
   "A drafted report for every client on the 4th",
@@ -120,7 +126,7 @@ export const FAQ = [
   },
   {
     question: "How does pricing work?",
-    answer: `One plan: ${PLAN_PRICE} a month for up to ${PLAN.clientLimit} clients. Billing runs through Paddle and you can cancel any time.`,
+    answer: `One plan: ${PLAN_PRICE} a month, or ${PLAN_YEARLY_PRICE} a year with 2 months free, for up to ${PLAN.clientLimit} clients. Billing runs through Paddle and you can cancel any time.`,
   },
 ];
 

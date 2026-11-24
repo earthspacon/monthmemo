@@ -49,6 +49,23 @@ it("MM-R40.b Subscribe opens Paddle checkout with the plan's price id", async ()
   await expect.poll(() => paddle.openedPriceIds).toEqual([billing.paddlePriceId]);
 });
 
+it("MM-R40.b the Yearly switch shows $40 a year and opens Paddle checkout with the yearly price id", async () => {
+  const { context, page } = await openPage();
+  await seedConnectedAgency({ context });
+  const billing = await readBilling({ context });
+  const paddle = await stubPaddle({ page });
+  await page.goto("/app/billing");
+
+  await page.getByRole("button", { name: "Yearly" }).click();
+  await page.getByText(formatPrice(PLAN.yearlyPriceCents), { exact: true }).waitFor();
+  await page.getByText("/ year · 2 months free").waitFor();
+  expect(await page.getByText(PRICE_LINE).isVisible()).toBe(false);
+  await page.getByRole("button", { name: "Subscribe" }).click();
+
+  expect(billing.paddleYearlyPriceId).toBeTruthy();
+  await expect.poll(() => paddle.openedPriceIds).toEqual([billing.paddleYearlyPriceId]);
+});
+
 it("MM-R40.c an active agency sees its client limit and Manage billing", async () => {
   const { context, page } = await openPage();
   await seedConnectedAgency({ context, status: "active" });

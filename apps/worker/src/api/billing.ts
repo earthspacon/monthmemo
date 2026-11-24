@@ -1,7 +1,7 @@
 import { PLAN, type BillingDto } from "@monthmemo/contract";
 
 import { createPortalSession, getPaddleEnvironment } from "../billing/paddle-api";
-import { planPriceId } from "../billing/prices";
+import { planPriceId, planYearlyPriceId } from "../billing/prices";
 import { HttpError, json, route, type Route } from "../http";
 import { getBillingRow } from "../repo/agencies";
 import type { ApiContext } from "./context";
@@ -12,8 +12,10 @@ export const billingRoutes: Route<ApiContext>[] = [
       status: agency.status,
       trialEndsAt: agency.trialEndsAt,
       priceCents: PLAN.priceCents,
+      yearlyPriceCents: PLAN.yearlyPriceCents,
       clientLimit: PLAN.clientLimit,
       paddlePriceId: planPriceId(deps.env) ?? "",
+      paddleYearlyPriceId: planYearlyPriceId(deps.env) ?? "",
       paddleClientToken: deps.env.PADDLE_CLIENT_TOKEN ?? "",
       paddleEnv: getPaddleEnvironment(deps.env),
     };

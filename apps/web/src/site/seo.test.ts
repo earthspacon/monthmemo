@@ -50,32 +50,32 @@ describe("Free report summary page", () => {
   });
 });
 
-describe("One $4 plan", () => {
+describe("One plan, $4 a month or $40 a year", () => {
   const PUBLIC_COPY = () => {
     return JSON.stringify({ SEO_PAGES, FAQ, LEGAL_DOCS, PLAN_FEATURES, llms: buildLlmsTxt() });
   };
 
-  it("sells one plan at $4 a month for up to 15 clients", () => {
-    expect(PLAN).toEqual({ priceCents: 400, clientLimit: 15 });
-    expect(buildLlmsTxt()).toContain("- One plan: $4/month, up to 15 clients, cancel anytime.");
+  it("sells one plan at $4 a month or $40 a year for up to 15 clients", () => {
+    expect(PLAN).toEqual({ priceCents: 400, yearlyPriceCents: 4000, clientLimit: 15 });
+    expect(buildLlmsTxt()).toContain(
+      "- One plan: $4/month or $40/year (2 months free), up to 15 clients, cancel anytime.",
+    );
   });
 
-  it("names no tier, toggle or pack in public copy, and no price but $4", () => {
+  it("names no tier or pack in public copy, and no price but $4 and $40", () => {
     const copy = PUBLIC_COPY();
-    expect(copy).not.toMatch(/\b(Starter|Growth|Solo|Agency plan|Pro)\b|yearly|annual|\bpacks?\b/i);
-    expect(new Set(copy.match(/\$\d+/g))).toEqual(new Set(["$4"]));
+    expect(copy).not.toMatch(/\b(Starter|Growth|Solo|Agency plan|Pro)\b|\bpacks?\b/i);
+    expect(new Set(copy.match(/\$\d+/g))).toEqual(new Set(["$4", "$40"]));
   });
 
-  it("puts one $4 offer in the JSON-LD of every page", () => {
+  it("puts the $4 monthly and $40 yearly offers in the JSON-LD of every page", () => {
     for (const page of SEO_PAGES) {
       const graph = buildJsonLd(page)["@graph"] as Array<{ "@type": string; offers?: unknown }>;
       const app = graph.find((node) => node["@type"] === "SoftwareApplication");
-      expect(app?.offers).toEqual({
-        "@type": "Offer",
-        price: "4",
-        priceCurrency: "USD",
-        url: `${SITE_URL}/pricing`,
-      });
+      expect(app?.offers).toEqual([
+        { "@type": "Offer", name: "MonthMemo, monthly", price: "4", priceCurrency: "USD", url: `${SITE_URL}/pricing` },
+        { "@type": "Offer", name: "MonthMemo, yearly", price: "40", priceCurrency: "USD", url: `${SITE_URL}/pricing` },
+      ]);
     }
   });
 });

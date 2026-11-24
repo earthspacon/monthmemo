@@ -26,3 +26,16 @@ describe("web analytics beacon", () => {
     }
   });
 });
+
+describe("pricing card", () => {
+  it("the prerendered pricing page shows the monthly price and keeps the yearly one hidden in place", () => {
+    const pricing = buildPrerenderedFiles(TEMPLATE).find(({ file }) => file === "pricing.html");
+    const html = pricing?.content ?? "";
+
+    expect(html).toMatch(/aria-pressed="true"[^>]*>Monthly</);
+    expect(html).toMatch(/<p class="[^"]*"><span[^>]*>\$4<\/span><span[^>]*>\/ month · cancel anytime<\/span>/);
+    expect(html).toMatch(
+      /<p hidden="" class="[^"]*"><span[^>]*>\$40<\/span><span[^>]*>\/ year · 2 months free<\/span>/,
+    );
+  });
+});

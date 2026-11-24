@@ -2,6 +2,7 @@ import type { BillingDto } from "@monthmemo/contract";
 import { attach, createEffect, createEvent, createStore, sample } from "effector";
 import { createGate } from "effector-react";
 
+import { $period } from "../pricing/model";
 import { $me, meFx } from "../session/model";
 import { apiRequest } from "../shared/api";
 import { createRemote } from "../shared/remote";
@@ -26,13 +27,14 @@ export const billing = createRemote<void, BillingDto | null>({
 export const $checkoutError = createStore("");
 
 const openCheckoutFx = attach({
-  source: { data: billing.$data, me: $me },
-  effect: async ({ data, me }) => {
-    if (!data || !me || !data.paddlePriceId) {
+  source: { data: billing.$data, me: $me, period: $period },
+  effect: async ({ data, me, period }) => {
+    const priceId = period === "yearly" ? data?.paddleYearlyPriceId : data?.paddlePriceId;
+    if (!data || !me || !priceId) {
       throw new Error("Subscriptions aren't open yet. Your free month keeps running in the meantime.");
     }
     const paddle = await loadPaddle({ billing: data, onEvent: (name) => paddleEventReceived(name) });
-    openPaddleCheckout({ paddle, priceId: data.paddlePriceId, email: me.email, agencyId: me.agency.id });
+    openPaddleCheckout({ paddle, priceId, email: me.email, agencyId: me.agency.id });
   },
 });
 

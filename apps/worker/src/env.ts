@@ -9,6 +9,7 @@ export type Env = {
   PADDLE_ENV: string;
   PADDLE_CLIENT_TOKEN?: string;
   PADDLE_PRICE?: string;
+  PADDLE_PRICE_YEARLY?: string;
   LLM_MODEL?: string;
   LLM_DAILY_USD_CAP?: string;
   LLM_AGENCY_DAILY_USD_CAP?: string;

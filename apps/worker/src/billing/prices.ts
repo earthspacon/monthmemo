@@ -5,7 +5,12 @@ export function planPriceId(env: Env) {
   return env.PADDLE_PRICE || null;
 }
 
+// The same plan billed yearly, or null while it isn't set up.
+export function planYearlyPriceId(env: Env) {
+  return env.PADDLE_PRICE_YEARLY || null;
+}
+
+// The monthly and the yearly price both buy the one plan.
 export function isPlanPrice({ env, priceId }: { env: Env; priceId: string | null }) {
-  const planPrice = planPriceId(env);
-  return planPrice !== null && priceId === planPrice;
+  return priceId !== null && [planPriceId(env), planYearlyPriceId(env)].includes(priceId);
 }

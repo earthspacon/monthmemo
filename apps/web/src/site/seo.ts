@@ -1,6 +1,6 @@
 import { PLAN } from "@monthmemo/contract";
 
-import { FAQ, PLAN_PRICE, PRODUCT_NAME } from "./config";
+import { FAQ, PLAN_PRICE, PLAN_YEARLY_PRICE, PRODUCT_NAME } from "./config";
 
 export const SITE_URL = "https://monthmemo.spacesonlabs.com";
 export const OG_IMAGE_PATH = "/og.png";
@@ -68,16 +68,17 @@ export function findSeoPage(path: string) {
   return SEO_PAGES.find((page) => page.path === path);
 }
 
-function buildOffer({ cents }: { cents: number }) {
+function buildOffer({ name, cents }: { name: string; cents: number }) {
   return {
     "@type": "Offer",
+    name,
     price: String(cents / 100),
     priceCurrency: "USD",
     url: `${SITE_URL}/pricing`,
   };
 }
 
-// JSON-LD for a prerendered page: the product with its one offer from PLAN everywhere, the FAQ on the landing page.
+// JSON-LD for a prerendered page: the plan's monthly and yearly offers from PLAN everywhere, the FAQ on the landing page.
 export function buildJsonLd(page: SeoPage) {
   const graph: object[] = [
     {
@@ -87,7 +88,10 @@ export function buildJsonLd(page: SeoPage) {
       description: SEO_PAGES[0].description,
       applicationCategory: "BusinessApplication",
       operatingSystem: "Web",
-      offers: buildOffer({ cents: PLAN.priceCents }),
+      offers: [
+        buildOffer({ name: `${PRODUCT_NAME}, monthly`, cents: PLAN.priceCents }),
+        buildOffer({ name: `${PRODUCT_NAME}, yearly`, cents: PLAN.yearlyPriceCents }),
+      ],
     },
   ];
 
@@ -112,8 +116,8 @@ export function buildLlmsTxt() {
     "",
     "> MonthMemo sends each client of a small marketing agency a branded monthly email that explains what changed in Google Analytics 4 and Search Console, and why. The agency approves every report before it is sent.",
     "",
-    "## Pricing (USD per month, tax added by Paddle where due)",
-    `- One plan: ${PLAN_PRICE}/month, up to ${PLAN.clientLimit} clients, cancel anytime.`,
+    "## Pricing (USD, tax added by Paddle where due)",
+    `- One plan: ${PLAN_PRICE}/month or ${PLAN_YEARLY_PRICE}/year (2 months free), up to ${PLAN.clientLimit} clients, cancel anytime.`,
     "- The first month is free, no card.",
     "",
     "## Pages",

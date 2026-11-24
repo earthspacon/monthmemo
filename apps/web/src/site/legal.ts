@@ -36,7 +36,7 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
       {
         heading: "Trial and plan",
         paragraphs: [
-          `Your first ${TRIAL_DAYS} days are free with up to ${PLAN.clientLimit} clients and no card. After that, the paid plan is needed to keep sending reports. It renews monthly until you cancel.`,
+          `Your first ${TRIAL_DAYS} days are free with up to ${PLAN.clientLimit} clients and no card. After that, the paid plan is needed to keep sending reports. It renews every month or every year, as you chose at checkout, until you cancel.`,
           "Prices, client limits and taxes are shown on the pricing page and at checkout. Paddle is the merchant of record.",
         ],
       },

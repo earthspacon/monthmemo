@@ -10,6 +10,7 @@ declare namespace Cloudflare {
     PADDLE_ENV: string;
     PADDLE_CLIENT_TOKEN: string;
     PADDLE_PRICE: string;
+    PADDLE_PRICE_YEARLY: string;
     LLM_DAILY_USD_CAP: string;
     LLM_AGENCY_DAILY_USD_CAP: string;
     OWNER_ALERT_EMAIL: string;

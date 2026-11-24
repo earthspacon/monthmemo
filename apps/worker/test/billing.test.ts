@@ -28,6 +28,7 @@ import {
 const MINUTE_MS = 60 * 1000;
 const DAY_MS = 24 * 60 * MINUTE_MS;
 const PRICE_ID = "pri_monthly_example";
+const YEARLY_PRICE_ID = "pri_yearly_example";
 const UNKNOWN_PRICE_ID = "pri_unknown_example";
 
 type SubscriptionEventType =
@@ -43,14 +44,17 @@ function subscriptionEvent({
   status,
   priceId,
   agencyId,
+  subscriptionId,
 }: {
   type: SubscriptionEventType;
   status: string;
   priceId: string;
   agencyId: string;
+  subscriptionId?: string;
 }) {
   const event = structuredClone(activated);
   event.event_id = `evt_${crypto.randomUUID().replaceAll("-", "")}`;
+  event.data.id = subscriptionId ?? event.data.id;
   event.event_type = type;
   event.data.status = status;
   event.data.custom_data.agency_id = agencyId;
@@ -82,8 +86,10 @@ describe("Billing", () => {
       status: "trialing",
       trialEndsAt: row?.trial_ends_at,
       priceCents: PLAN.priceCents,
+      yearlyPriceCents: PLAN.yearlyPriceCents,
       clientLimit: PLAN.clientLimit,
       paddlePriceId: PRICE_ID,
+      paddleYearlyPriceId: YEARLY_PRICE_ID,
       paddleClientToken: env.PADDLE_CLIENT_TOKEN,
       paddleEnv: "sandbox",
     });
@@ -158,6 +164,31 @@ describe("Billing", () => {
       expect(response.status).toBe(200);
       expect(await agencyState(agencyId)).toEqual({ status: step.expected });
     }
+  });
+
+  it("MM-R24 a yearly subscription.created and subscription.updated turn the plan on", async () => {
+    const { agencyId } = await seedAgency();
+    // A subscription id no earlier test has linked to another agency.
+    const subscriptionId = `sub_${crypto.randomUUID().replaceAll("-", "")}`;
+
+    for (const type of ["subscription.created", "subscription.updated"] as const) {
+      const response = await postPaddleEvent({
+        body: subscriptionEvent({ type, status: "active", priceId: YEARLY_PRICE_ID, agencyId, subscriptionId }),
+      });
+      expect(response.status).toBe(200);
+      expect(await agencyState(agencyId)).toEqual({ status: "active" });
+    }
+  });
+
+  it("MM-R24 a new subscription on an unknown price id leaves the trial as it is", async () => {
+    const { agencyId } = await seedAgency();
+
+    const response = await postPaddleEvent({
+      body: subscriptionEvent({ type: "subscription.created", status: "active", priceId: UNKNOWN_PRICE_ID, agencyId }),
+    });
+
+    expect(response.status).toBe(200);
+    expect(await agencyState(agencyId)).toEqual({ status: "trialing" });
   });
 
   it("MM-R24 a signed event with an unknown price id answers 200 and changes nothing", async () => {
