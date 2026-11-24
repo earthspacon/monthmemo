@@ -1,0 +1,3 @@
+# False hits: "key" is a field name passed to readOptionalString, not a secret.
+3e956e592475463dbb7b37f77d7381e9141ea985:apps/worker/src/api/clients.ts:generic-api-key:68
+56439a59c40cf38628691ee1d90794ea90a824d7:apps/worker/src/api/clients.ts:generic-api-key:68
