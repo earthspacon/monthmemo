@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 
 import { sitePageOpened } from "../session/model";
 import { ThemeToggle } from "../shared/ThemeToggle";
-import { FOOTER_LINKS, PRODUCT_NAME, SELLER_BRAND, SUPPORT_EMAIL } from "./config";
+import { FOOTER_LINKS, PRODUCT_NAME, SELLER_BRAND, STUDIO_URL, SUPPORT_EMAIL } from "./config";
 import { findSeoPage } from "./seo";
 import { HeaderEntry } from "./SessionLinks";
 
@@ -53,7 +53,11 @@ export const SiteLayout = ({ children }: { children: ReactNode }) => {
       <footer className="border-t border-slate-200 bg-surface">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-6 text-sm text-slate-500">
           <span>
-            © {SELLER_BRAND} · {SUPPORT_EMAIL}
+            ©{" "}
+            <a href={STUDIO_URL} className="underline underline-offset-2 hover:text-slate-900">
+              {SELLER_BRAND}
+            </a>{" "}
+            · {SUPPORT_EMAIL}
           </span>
           <nav className="flex flex-wrap items-center gap-x-4 sm:gap-y-4">
             {FOOTER_LINKS.map((link) => {

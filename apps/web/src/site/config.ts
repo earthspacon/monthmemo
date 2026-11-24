@@ -2,6 +2,7 @@ import { type BillingPeriod, PLAN, TRIAL_DAYS } from "@monthmemo/contract";
 
 // Every public page reads the seller name and contact from this file only.
 export const SELLER_LEGAL_NAME = "Spaceson Labs";
+export const STUDIO_URL = "https://spacesonlabs.com";
 export const CONTACT_EMAIL = "monthmemo@spacesonlabs.com";
 
 export const SELLER_BRAND = SELLER_LEGAL_NAME;
