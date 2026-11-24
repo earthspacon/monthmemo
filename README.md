@@ -5,6 +5,8 @@ and Search Console once, adds its clients, and on the 4th of every month MonthMe
 plus a short plain-English narrative of up to 150 words. The agency approves or skips each draft and the branded HTML
 email goes out to the client's recipients. Billing is through Paddle, with a free first month.
 
+Live at [monthmemo.spacesonlabs.com](https://monthmemo.spacesonlabs.com). TypeScript end to end: a React + Effector + Tailwind app, a Cloudflare Worker on D1 with Cron Triggers for the monthly run, the GA4 and Search Console APIs, Groq for the narrative, Brevo for mail and Paddle for billing. Tested with Vitest (the worker tests run inside workerd) and Playwright flows against a real build.
+
 ## Layout
 
 - `apps/worker` is the Cloudflare Worker: Google sign-in, data connection, clients, monthly run, narrative, sending,
@@ -30,3 +32,7 @@ In a second terminal run `pnpm --dir apps/web dev` for the app with hot reload.
 - `pnpm test` runs every package's unit and integration tests (the worker's run inside workerd against a local D1).
 - `pnpm typecheck` type-checks all packages.
 - `pnpm --dir apps/web test:e2e` runs the browser tests against a local `wrangler dev` with the fake Google client.
+
+## License
+
+MIT, see [LICENSE](LICENSE).
